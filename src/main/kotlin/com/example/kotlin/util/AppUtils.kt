@@ -6,6 +6,11 @@ import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 
+const val WAIT_QUEUE: String = ":user-queue:wait"
+const val ALLOW_QUEUE: String = ":user-queue:allow"
+const val ACCESS_TOKEN: String = ":user-access:"
+const val TOKEN_TTL_INFO: String = "reserve:USERS-TTL:INFO";
+
 fun createCookie(key: String, value: String): Cookie {
 
     return Cookie(key, value).apply {
@@ -28,3 +33,4 @@ fun parsingToken(request: HttpServletRequest): String {
 
     return token
 }
+

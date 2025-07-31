@@ -7,5 +7,4 @@ interface PerformanceRepository: JpaRepository<Performance, Long>, PerformanceRe
     // @Query("SELECT s.performance FROM ScreenInfo s WHERE s.place.id = :placeId")
     // fun findPerformancesByPlaceId(@Param("placeId") placeId: Long): List<Performance>
 
-
 }

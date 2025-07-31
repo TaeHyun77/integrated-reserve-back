@@ -55,6 +55,21 @@ dependencies {
 
 	// redis
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+
+	// kafka 의존성
+	implementation ("org.springframework.kafka:spring-kafka")
+
+	// WebFlux
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+	// 코루틴
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.6.3")
+
+	// serializer
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+
+	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
 }
 
 // querydsl QClass 위치
