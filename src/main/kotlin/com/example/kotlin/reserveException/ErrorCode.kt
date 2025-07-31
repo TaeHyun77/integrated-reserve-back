@@ -52,6 +52,8 @@ enum class ErrorCode (
     // REWARD
     REWARD_ALREADY_CLAIMED("REWARD_ALREADY_CLAIMED", "오늘 이미 리워드를 지급받았습니다."),
 
+    // QUEUEING
+    ALREADY_REGISTERED_USER("ALREADY_REGISTERED_USER", "이미 등록된 사용자입니다."),
 
     // ECT
     FAIL_TO_SAVE_DATA("FAIL_TO_SAVE_DATA", "데이터 저장 실패"),

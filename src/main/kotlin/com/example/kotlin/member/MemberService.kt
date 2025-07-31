@@ -19,7 +19,8 @@ class MemberService(
     private val memberRepository: MemberRepository,
     private val passwordEncoder: PasswordEncoder,
     private val jwtUtil: JwtUtil,
-    private val idempotencyService: IdempotencyService
+    private val idempotencyService: IdempotencyService,
+
 ): Loggable {
 
     fun memberInfo(token: String): ResponseEntity<MemberResponse> {
