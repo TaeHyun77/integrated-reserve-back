@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.reactive.asFlow
 import org.springframework.http.codec.ServerSentEvent
 import org.springframework.stereotype.Service
-import reactor.core.publisher.Sinks
 
 @Service
 class SseEventService(
@@ -21,14 +20,20 @@ class SseEventService(
 ): Loggable {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    suspend fun streamQueueEvents(userId: String, queueType: String): Flow<ServerSentEvent<String>> {
+    suspend fun streamQueueEvents(
+        userId: String,
+        queueType: String
+    ): Flow<ServerSentEvent<String>> {
+
+        log.info { "이벤트: $queueType" }
+
         return queueService.sink.asFlux().asFlow()
             .filter { it.queueType == queueType }
-            .onEach { log.info { "이벤트 수신: $it" } }
             .flatMapConcat {
                 flow {
                     try {
-                        log.info{ "이벤트 연결 !" }
+                        log.info{ "sink 이벤트 연결 !" }
+                        val queueType = queueType.split(":")[0]
 
                         val isAllowed = queueService.searchUserRanking(userId, queueType, "allow")
 
