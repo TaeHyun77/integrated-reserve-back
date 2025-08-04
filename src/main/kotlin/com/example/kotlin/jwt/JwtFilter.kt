@@ -4,40 +4,39 @@ import com.example.kotlin.member.MemberRepository
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
 import io.github.oshai.kotlinlogging.KotlinLogging
-import jakarta.servlet.FilterChain
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.web.filter.OncePerRequestFilter
+import org.springframework.stereotype.Component
+import org.springframework.web.server.ServerWebExchange
+import org.springframework.web.server.WebFilter
+import org.springframework.web.server.WebFilterChain
+import reactor.core.publisher.Mono
 
 private val log = KotlinLogging.logger { }
 
+@Component
 class JwtFilter(
     private val jwtUtil: JwtUtil,
     private val memberRepository: MemberRepository
-): OncePerRequestFilter() {
+): WebFilter {
 
-    override fun doFilterInternal(
-        request: HttpServletRequest,
-        response: HttpServletResponse,
-        filterChain: FilterChain
-    ) {
+    override fun filter(
+        exchange: ServerWebExchange,
+        chain: WebFilterChain
+    ): Mono<Void> {
 
-        val accessToken = request.getHeader("access")
-            ?: run {
-            filterChain.doFilter(request, response)
-            return
+        val request = exchange.request
+        val accessToken = request.headers.getFirst("access")
+
+        if (accessToken.isNullOrBlank()) {
+            return chain.filter(exchange)
         }
 
-        try {
+        return try {
             if (jwtUtil.isExpired(accessToken)) {
-                throw ReserveException(HttpStatus.UNAUTHORIZED, ErrorCode.ACCESSTOKEN_ISEXPIRED)
+                throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.ACCESSTOKEN_ISEXPIRED)
             }
-        } catch (e: ReserveException) {
-            throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_TOKEN)
-        }
 
         val category = jwtUtil.getCategory(accessToken)
         if (category != "access") {
@@ -53,13 +52,15 @@ class JwtFilter(
             }
 
         val customUserDetails = CustomUserDetails(member)
-
         val authToken = UsernamePasswordAuthenticationToken(
             customUserDetails, null, customUserDetails.authorities
         )
 
         SecurityContextHolder.getContext().authentication = authToken
 
-        filterChain.doFilter(request, response)
+        chain.filter(exchange)
+    } catch (e: Exception) {
+        throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_TOKEN)
+        }
     }
 }

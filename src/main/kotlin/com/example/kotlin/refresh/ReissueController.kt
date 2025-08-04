@@ -1,10 +1,9 @@
 package com.example.kotlin.refresh
 
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ServerWebExchange
+import reactor.core.publisher.Mono
 
 @RestController
 class ReissueController(
@@ -12,8 +11,7 @@ class ReissueController(
 ) {
 
     @PostMapping("/reToken")
-    fun reToken(request: HttpServletRequest, response: HttpServletResponse): ResponseEntity<Any> {
-        return reissueService.reToken(request, response)
+    fun reToken(exchange: ServerWebExchange): Mono<Void> {
+        return reissueService.reToken(exchange)
     }
-
 }

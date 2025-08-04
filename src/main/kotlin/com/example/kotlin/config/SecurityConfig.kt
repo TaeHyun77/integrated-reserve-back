@@ -1,69 +1,61 @@
 package com.example.kotlin.config
 
-import com.example.kotlin.jwt.CustomLogoutFilter
-import com.example.kotlin.jwt.JwtFilter
-import com.example.kotlin.jwt.JwtUtil
+import com.example.kotlin.jwt.CustomLogoutWebFilter
+import com.example.kotlin.jwt.CustomUserDetailService
 import com.example.kotlin.jwt.LoginFilter
-import com.example.kotlin.member.MemberRepository
-import com.example.kotlin.refresh.RefreshRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.authentication.AuthenticationManager
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
-import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
-import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.authentication.ReactiveAuthenticationManager
+import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder
+import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.web.cors.reactive.CorsConfigurationSource
 import org.springframework.web.cors.CorsConfiguration
-import org.springframework.web.cors.CorsConfigurationSource
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
+
 import kotlin.jvm.java
 
-@EnableWebSecurity
+@EnableWebFluxSecurity
 @Configuration
 class SecurityConfig(
-    private val authenticationConfiguration: AuthenticationConfiguration,
-    private val jwtUtil: JwtUtil,
-    private val refreshRepository: RefreshRepository,
-    private val memberRepository: MemberRepository
+    private val loginWebFilter: LoginFilter,
+    private val customLogoutWebFilter: CustomLogoutWebFilter,
+    private val userDetailsService: CustomUserDetailService
 ) {
 
     @Bean
-    fun authenticationManager(): AuthenticationManager =
-        authenticationConfiguration.authenticationManager
-
-    @Bean
-    fun passwordEncoder(): PasswordEncoder {
-        return BCryptPasswordEncoder()
+    fun authenticationManager(): ReactiveAuthenticationManager {
+        val manager = UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService)
+        manager.setPasswordEncoder(passwordEncoder())
+        return manager
     }
 
-    @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        http
-            .cors { it.configurationSource(corsConfigurationSource()) }
-            .csrf { it.disable() }
-            .formLogin { it.disable() }
-            .httpBasic { it.disable() }
-            .authorizeHttpRequests {
-                it
-                    .requestMatchers(
-                        "/", "/member/**", "/venue/**", "/performance/**", "/screenInfo/**", "/seat/**", "/reToken", "/reserve/**", "/queue/**"
-                    ).permitAll()
-                    .requestMatchers("/admin").hasRole("ADMIN")
-                    .requestMatchers("/login", "/logout").permitAll()
-                    .anyRequest().authenticated()
-            }
-            .addFilterBefore(JwtFilter(jwtUtil, memberRepository), LoginFilter::class.java)
-            .addFilterAt(LoginFilter(authenticationManager(), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter::class.java)
-            .addFilterBefore(CustomLogoutFilter(jwtUtil, refreshRepository), JwtFilter::class.java)
-            .sessionManagement {
-                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            }
+    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
-        return http.build()
+    @Bean
+    fun securityWebFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
+        return http
+            .csrf { it.disable() }
+            .httpBasic { it.disable() }
+            .formLogin { it.disable() }
+            .logout { it.disable() }
+            .cors { it.configurationSource(corsConfigurationSource()) }
+            .authorizeExchange {
+                it.pathMatchers(
+                    "/", "/member/**", "/venue/**", "/performance/**",
+                    "/screenInfo/**", "/seat/**", "/reToken", "/reserve/**", "/queue/**"
+                ).permitAll()
+                    .pathMatchers("/admin").hasRole("ADMIN")
+                    .pathMatchers("/login", "/logout").permitAll()
+                    .anyExchange().authenticated()
+            }
+            .addFilterAt(loginWebFilter, SecurityWebFiltersOrder.FORM_LOGIN)
+            .addFilterBefore(customLogoutWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+            .build()
     }
 
     @Bean

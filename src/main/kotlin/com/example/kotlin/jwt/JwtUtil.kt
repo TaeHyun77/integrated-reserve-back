@@ -2,7 +2,6 @@ package com.example.kotlin.jwt
 
 import com.example.kotlin.member.Role
 import io.jsonwebtoken.Jwts
-import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
@@ -12,25 +11,20 @@ import javax.crypto.spec.SecretKeySpec
 
 @Component
 class JwtUtil(
-    @Value("\${spring.jwt.secret}") secretKey: String,
-    private val request: HttpServletRequest,
+    @Value("\${spring.jwt.secret}") secretKey: String
 ) {
-
-    private fun getClaim(token: String, key: String): String {
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).payload.get(key, String::class.java)
-    }
 
     private val secretKey: SecretKey = SecretKeySpec(
         secretKey.toByteArray(StandardCharsets.UTF_8),
         "HmacSHA256"
     )
 
-    fun getUsername(token: String): String {
-        return getClaim(token, "username")
+    private fun getClaim(token: String, key: String): String {
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).payload.get(key, String::class.java)
     }
 
-    fun getPassword(token: String): String {
-        return getClaim(token, "password")
+    fun getUsername(token: String): String {
+        return getClaim(token, "username")
     }
 
     fun getRole(token: String): Role {

@@ -1,7 +1,6 @@
 package com.example.kotlin.queueing
 
 import com.example.kotlin.config.Loggable
-import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.http.server.reactive.ServerHttpResponse
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -39,7 +38,7 @@ class QueueController (
     suspend fun sendCookie(
         @RequestParam(name = "userId") userId: String,
         @RequestParam(name = "performanceId") performanceId: Long,
-        response: HttpServletResponse
+        response: ServerHttpResponse
     ): ResponseEntity<String> {
 
         return queueService.sendCookie(userId, performanceId, response)

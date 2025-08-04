@@ -3,12 +3,12 @@ package com.example.kotlin.refresh
 import com.example.kotlin.util.createCookie
 import com.example.kotlin.jwt.JwtUtil
 import io.jsonwebtoken.ExpiredJwtException
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ServerWebExchange
+import reactor.core.publisher.Mono
 
 @Service
 class ReissueService(
@@ -17,34 +17,40 @@ class ReissueService(
 ) {
 
     @Transactional
-    fun reToken(request: HttpServletRequest, response: HttpServletResponse): ResponseEntity<Any> {
-        val cookies = request.cookies
-        val refresh = cookies?.firstOrNull { it.name == "refresh" }?.value
+    fun reToken(exchange: ServerWebExchange): Mono<Void> {
+        val request = exchange.request
+        val response = exchange.response
 
-        if (refresh == null) {
-            return ResponseEntity("refresh token null", HttpStatus.BAD_REQUEST)
+        val refreshToken = request.cookies.getFirst("refresh")?.value
+
+        if (refreshToken.isNullOrBlank()) {
+            response.statusCode = HttpStatus.BAD_REQUEST
+            return response.setComplete()
         }
 
         try {
-            jwtUtil.isExpired(refresh)
+            jwtUtil.isExpired(refreshToken)
         } catch (e: ExpiredJwtException) {
-            return ResponseEntity("access token expired", HttpStatus.BAD_REQUEST)
+            response.statusCode = HttpStatus.BAD_REQUEST
+            return response.setComplete()
         }
 
-        val category = jwtUtil.getCategory(refresh)
+        val category = jwtUtil.getCategory(refreshToken)
         if (category != "refresh") {
-            return ResponseEntity("invalid refresh token", HttpStatus.BAD_REQUEST)
+            response.statusCode = HttpStatus.BAD_REQUEST
+            return response.setComplete()
         }
 
-        val isExist = refreshRepository.existsByRefresh(refresh)
-        if (!isExist) {
-            return ResponseEntity("invalid refresh token", HttpStatus.BAD_REQUEST)
+        val exists = refreshRepository.existsByRefresh(refreshToken)
+        if (!exists) {
+            response.statusCode = HttpStatus.BAD_REQUEST
+            return response.setComplete()
         }
 
-        val username = jwtUtil.getUsername(refresh)
-        val role = jwtUtil.getRole(refresh)
-        val name = jwtUtil.getName(refresh)
-        val email = jwtUtil.getEmail(refresh)
+        val username = jwtUtil.getUsername(refreshToken)
+        val role = jwtUtil.getRole(refreshToken)
+        val name = jwtUtil.getName(refreshToken)
+        val email = jwtUtil.getEmail(refreshToken)
 
         val newAccess = jwtUtil.createToken(
             username = username,
@@ -52,7 +58,7 @@ class ReissueService(
             email = email,
             role = role.name,
             category = "access",
-            expired = 600_000L,
+            expired = 600_000L
         )
 
         val newRefresh = jwtUtil.createToken(
@@ -61,16 +67,17 @@ class ReissueService(
             email = email,
             role = role.name,
             category = "refresh",
-            expired = 86_400_000L,
+            expired = 86_400_000L
         )
 
-        refreshRepository.deleteByRefresh(refresh)
+        refreshRepository.deleteByRefresh(refreshToken)
         createRefresh(username, newRefresh, 86_400_000L)
 
-        response.setHeader("access", newAccess)
+        response.headers.add("access", newAccess)
         response.addCookie(createCookie("refresh", newRefresh))
+        response.statusCode = HttpStatus.OK
 
-        return ResponseEntity.ok().build()
+        return response.setComplete()
     }
 
     @Transactional
