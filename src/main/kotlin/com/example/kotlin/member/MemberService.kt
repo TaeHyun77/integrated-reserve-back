@@ -23,6 +23,7 @@ class MemberService(
 
 ): Loggable {
 
+    @Transactional(readOnly = true)
     fun memberInfo(token: String): ResponseEntity<MemberResponse> {
 
         val username = jwtUtil.getUsername(token)

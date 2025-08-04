@@ -10,8 +10,6 @@ import com.example.kotlin.util.ACCESS_TOKEN
 import com.example.kotlin.util.ALLOW_QUEUE
 import com.example.kotlin.util.TOKEN_TTL_INFO
 import com.example.kotlin.util.WAIT_QUEUE
-import jakarta.servlet.http.Cookie
-import jakarta.servlet.http.HttpServletResponse
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,7 +18,9 @@ import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.withContext
 import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
+import org.springframework.http.server.reactive.ServerHttpResponse
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -52,6 +52,8 @@ class QueueService (
         queueType: String,
         enterTimestamp: Long
     ): Long {
+
+        log.info("Current thread: ${Thread.currentThread().name}")
 
         val inWait = searchUserRanking(userId, queueType, "wait")
         val inAllow = searchUserRanking(userId, queueType, "allow")
@@ -181,23 +183,25 @@ class QueueService (
 
     /**
      * 생성한 토큰을 쿠키에 저장
+     *
+     * ServerWebExchange : 요청/응답 전체를 포괄하는 컨텍스트, ServerHttpResponse : HTTP 응답 처리에만 특화된 객체
      */
     suspend fun sendCookie(
         userId: String,
         performanceId: Long,
-        response: HttpServletResponse
+        response: ServerHttpResponse
     ): ResponseEntity<String> {
 
         val encodedName = URLEncoder.encode(userId, StandardCharsets.UTF_8)
         val token = generateAccessToken(userId, performanceId)
         val cookieName = performanceId.toString() + "_user-access-cookie_$encodedName"
 
-        val cookie = Cookie(cookieName, token).apply {
-            path = "/"
-            maxAge = 300
-        }
+        val responseCookie = ResponseCookie.from(cookieName, token)
+            .path("/")
+            .maxAge(Duration.ofSeconds(300))
+            .build()
 
-        response.addCookie(cookie)
+        response.addCookie(responseCookie)
 
         return ResponseEntity.ok("쿠키 발급 완료")
     }

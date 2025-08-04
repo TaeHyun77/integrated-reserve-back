@@ -24,8 +24,11 @@ repositories {
 
 
 dependencies {
+
+	// WebFlux
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
+
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -58,9 +61,6 @@ dependencies {
 
 	// kafka 의존성
 	implementation ("org.springframework.kafka:spring-kafka")
-
-	// WebFlux
-	implementation("org.springframework.boot:spring-boot-starter-webflux")
 
 	// 코루틴
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3")

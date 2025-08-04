@@ -2,27 +2,25 @@ package com.example.kotlin.util
 
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
-import jakarta.servlet.http.Cookie
-import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseCookie
+import org.springframework.http.server.reactive.ServerHttpRequest
 
 const val WAIT_QUEUE: String = ":user-queue:wait"
 const val ALLOW_QUEUE: String = ":user-queue:allow"
 const val ACCESS_TOKEN: String = ":user-access:"
 const val TOKEN_TTL_INFO: String = "reserve:USERS-TTL:INFO";
 
-fun createCookie(key: String, value: String): Cookie {
-
-    return Cookie(key, value).apply {
-        maxAge = 12 * 60 * 60
-        isHttpOnly = false
-        path = "/"
-    }
+fun createCookie(key: String, value: String): ResponseCookie {
+    return ResponseCookie.from(key, value)
+        .maxAge(12 * 60 * 60)
+        .path("/")
+        .build()
 }
 
-fun parsingToken(request: HttpServletRequest): String {
+fun parsingToken(request: ServerHttpRequest): String {
 
-    val authorization = request.getHeader("Authorization")
+    val authorization = request.headers.getFirst("Authorization")
         ?: throw ReserveException(HttpStatus.UNAUTHORIZED, ErrorCode.NOT_EXIST_AUTHORIZATION_IN_HEADER)
 
     if (!authorization.startsWith("Bearer ")) {

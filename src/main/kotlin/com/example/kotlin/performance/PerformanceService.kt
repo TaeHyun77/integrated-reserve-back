@@ -45,6 +45,7 @@ class PerformanceService(
         log.info { "performance 삭제 완료" }
     }
 
+    @Transactional
     fun performanceList(venueId: Long): List<PerformanceResponse> {
 
         val performances = performanceRepository.findPerformancesByVenueId(venueId)

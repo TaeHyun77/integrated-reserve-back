@@ -4,9 +4,9 @@ import com.example.kotlin.config.Loggable
 import com.example.kotlin.util.parsingToken
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
-import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.server.reactive.ServerHttpRequest
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -23,7 +23,7 @@ class MemberController(
 
     // 로그인 사용자 정보 조회
     @GetMapping("/info")
-    fun memberInfo(request: HttpServletRequest): ResponseEntity<MemberResponse> {
+    fun memberInfo(request: ServerHttpRequest): ResponseEntity<MemberResponse> {
 
         val token = parsingToken(request)
 
@@ -44,11 +44,11 @@ class MemberController(
 
     // 하루 한 번 리워드 지급 로직
     @PostMapping("/reward/{today}")
-    fun earnRewardToday(request: HttpServletRequest, @PathVariable("today") today: LocalDate): ResponseEntity<String> {
+    fun earnRewardToday(request: ServerHttpRequest, @PathVariable("today") today: LocalDate): ResponseEntity<String> {
 
         val token: String = parsingToken(request)
 
-        val idempotencyKey: String = request.getHeader("Idempotency-key")
+        val idempotencyKey: String = request.headers.getFirst("Idempotency-key")
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_IN_HEADER_IDEMPOTENCY_KEY)
 
         log.info { "idempotencyKey : $idempotencyKey" }
