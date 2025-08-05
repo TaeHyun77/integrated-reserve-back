@@ -11,11 +11,11 @@ class IdempotencyService(
     private val idempotencyRepository: IdempotencyRepository,
 ): Loggable {
 
-    fun execute(
+    suspend fun execute(
         key: String,
         url: String,
         method: String,
-        process: () -> String
+        process: suspend () -> String
     ): ResponseEntity<String> {
 
         val now = LocalDateTime.now()

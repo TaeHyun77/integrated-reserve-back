@@ -1,9 +1,11 @@
 package com.example.kotlin.queueing
 
 import com.example.kotlin.config.Loggable
+import com.example.kotlin.idempotency.IdempotencyService
 import com.example.kotlin.queueing.event.QueueEventPayload
 import com.example.kotlin.outbox.Outbox
 import com.example.kotlin.outbox.OutboxRepository
+import com.example.kotlin.redis.lock.RedisLockUtil
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
 import com.example.kotlin.util.ACCESS_TOKEN
@@ -38,9 +40,26 @@ class QueueService (
     val sink: Sinks.Many<QueueEventPayload> = Sinks.many().replay().limit(1),
 
     private val reactiveRedisTemplate: ReactiveRedisTemplate<String, String>,
-    private val outboxRepository: OutboxRepository
+    private val outboxRepository: OutboxRepository,
+    private val idempotencyService: IdempotencyService
 
 ): Loggable {
+
+    suspend fun register(
+        userId: String,
+        queueType: String,
+        enterTimestamp: Long,
+        idempotencyKey: String
+    ): ResponseEntity<String> {
+
+        return RedisLockUtil.acquireLockAndRun("$userId:$queueType:queueing")
+        { idempotencyService.execute(
+            key = idempotencyKey,
+            url = "/queue/register",
+            method = "POST",
+        ) { registerUserToWaitQueue(userId, queueType, enterTimestamp) }
+        }
+    }
 
     /**
      * 대기열 등록
@@ -51,9 +70,9 @@ class QueueService (
         userId: String,
         queueType: String,
         enterTimestamp: Long
-    ): Long {
+    ): String {
 
-        log.info("Current thread: ${Thread.currentThread().name}")
+        log.info { "Current thread: ${Thread.currentThread().name}" }
 
         val inWait = searchUserRanking(userId, queueType, "wait")
         val inAllow = searchUserRanking(userId, queueType, "allow")
@@ -79,7 +98,7 @@ class QueueService (
         val rank = searchUserRanking(userId, queueType, "wait")
         log.info{"${userId}님 ${rank}번째로 사용자 대기열 등록 성공" }
 
-        return rank
+        return "해당 사용자는 이미 대기열에 등록되셨습니다."
     }
 
     /**
@@ -111,52 +130,89 @@ class QueueService (
         return rank
     }
 
-    suspend fun cancelWaitOrAllowUser(
+    suspend fun cancelUser(userId: String, queueType: String, queueCategory: String): ResponseEntity<String> {
+        return when (queueCategory) {
+            "wait" -> cancelWaitOrAllow(userId, queueType)
+            "allow" -> cancelAllowUser(userId, queueType)
+            else -> throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_QUEUE_CATEGORY)
+        }
+    }
+
+    /*
+    * 문제 상황 발생 가능성
+    *
+    * 승격 로직이 wait에서 사용자를 삭제하고 allow로 옮기기 전에 취소 로직이 allow에서 삭제를 진행하는 경우
+    * ⇒ 이러한 타이밍으로 인한 경쟁 상태를 별도로 관리하여 문제를 해결
+    * */
+    private suspend fun cancelWaitOrAllow(userId: String, queueType: String): ResponseEntity<String> {
+        val waitQueueKey = "$queueType$WAIT_QUEUE"
+
+        val removedCount = reactiveRedisTemplate.opsForZSet()
+            .remove(waitQueueKey, userId)
+            .awaitSingle()
+
+        return if (removedCount > 0L) {
+            sendEventToKafka(waitQueueKey, userId, "CANCELED")
+            ResponseEntity.ok("대기열 삭제 완료")
+        } else {
+            val allowResult = cancelAllowUserForWaitContext(userId, queueType)
+            allowResult ?: run {
+                log.info { "이미 삭제가 처리된 사용자" }
+                ResponseEntity.ok("이미 삭제가 처리된 사용자")
+            }
+        }
+    }
+
+    // 경쟁 상태 문제로 인한 별도의 로직
+    private suspend fun cancelAllowUserForWaitContext(
+        userId: String, queueType: String
+    ): ResponseEntity<String>? {
+        val allowQueueKey = "$queueType$ALLOW_QUEUE"
+
+        val allowRemovedCount = reactiveRedisTemplate.opsForZSet()
+            .remove(allowQueueKey, userId)
+            .awaitSingle()
+
+        // 승격 중 타이밍 문제로 간주
+        if (allowRemovedCount == 0L) return null
+
+        removeTtlKey(userId)
+        return ResponseEntity.ok("참가열 삭제 완료")
+    }
+
+    suspend fun cancelAllowUser(
         userId: String,
         queueType: String,
-        queueCategory: String
     ): ResponseEntity<String> {
 
         try {
-            if (queueCategory == "wait") {
-                val waitQueueKey = "$queueType$WAIT_QUEUE"
+            val allowQueueKey = "$queueType$ALLOW_QUEUE"
 
-                val removedCount = reactiveRedisTemplate.opsForZSet()
-                    .remove(waitQueueKey, userId) // 성공 : 삭제된 개수 반환 , 실패 : 0L 반환
-                    .awaitSingle()
+            val allowRemovedCount = reactiveRedisTemplate.opsForZSet()
+                .remove(allowQueueKey, userId)
+                .awaitSingle()
 
-                if (removedCount == 0L) {
-                    throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.USER_NOT_FOUND_IN_THE_QUEUE)
-                }
-
-                sendEventToKafka(waitQueueKey, userId, "CANCELED")
-
-                return ResponseEntity.ok("대기열 삭제 완료")
-
-            } else {
-                val allowQueueKey = "$queueType$ALLOW_QUEUE"
-
-                val allowRemovedCount = reactiveRedisTemplate.opsForZSet()
-                    .remove(allowQueueKey, userId)
-                    .awaitSingle()
-
-                if (allowRemovedCount == 0L) {
-                    throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.USER_NOT_FOUND_IN_THE_QUEUE)
-                }
-
-                val ttlRemovedCount = reactiveRedisTemplate.opsForZSet()
-                    .remove(TOKEN_TTL_INFO, userId)
-                    .awaitSingle()
-
-                if (ttlRemovedCount == 0L) {
-                    log.warn { "${userId}님의 TTL 키가 존재하지 않아 삭제되지 않았습니다." }
-                }
-
-                return ResponseEntity.ok("참가열 삭제 완료")
+            if (allowRemovedCount == 0L) {
+                throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.USER_NOT_FOUND_IN_THE_QUEUE)
             }
+
+            removeTtlKey(userId)
+            return ResponseEntity.ok("참가열 삭제 완료")
+
         } catch (e: ReserveException) {
             log.error { "예약 취소 중 오류 발생" }
             throw e
+        }
+    }
+
+    // TTL 키 삭제 로직
+    private suspend fun removeTtlKey(userId: String) {
+        val ttlRemovedCount = reactiveRedisTemplate.opsForZSet()
+            .remove(TOKEN_TTL_INFO, userId)
+            .awaitSingle()
+
+        if (ttlRemovedCount == 0L) {
+            log.warn { "$userId TTL 키가 존재하지 않아 삭제되지 않았습니다." }
         }
     }
 

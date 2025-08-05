@@ -26,7 +26,7 @@ class RedisLockUtil(
         /*
         * 특정 비즈니스 로직에서 Lock 획득을 시도하고 획득하지 못하면 예외를 던짐
         * */
-        fun <T> acquireLockAndRun(key: String, block: () -> T): T {
+        suspend fun <T> acquireLockAndRun(key: String, block: suspend () -> T): T {
 
             if (key.isBlank()) {
                 log.error("[RedisLockError] key is blank")
@@ -62,7 +62,7 @@ class RedisLockUtil(
         /*
         * 특정 비즈니스 로직을 실행하고, 실행이 끝나면 Lock을 해제
         * */
-        private fun <T> proceedWithLock(key: String, block: () -> T): T {
+        private suspend fun <T> proceedWithLock(key: String, block: suspend () -> T): T {
             return try {
                 block()
             } catch (e: Exception) {

@@ -42,6 +42,8 @@ enum class ErrorCode (
 
     NOT_ENOUGH_CREDIT("NOT_ENOUGH_CREDIT", "보유 금액이 부족합니다."),
 
+    INVALID_QUEUE_CATEGORY("INVALID_QUEUE_CATEGORY", "유효하지 않은 QUEUE CATEGORY 입니다."),
+
 
     // JOIN
     INVALID_USERNAME("INVALID_USERNAME", "유효하지 않은 username 값 입니다."),

@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.reactive.asFlow
 import org.springframework.http.codec.ServerSentEvent
 import org.springframework.stereotype.Service
@@ -24,8 +23,6 @@ class SseEventService(
         userId: String,
         queueType: String
     ): Flow<ServerSentEvent<String>> {
-
-        log.info { "이벤트: $queueType" }
 
         return queueService.sink.asFlux().asFlow()
             .filter { it.queueType == queueType }
