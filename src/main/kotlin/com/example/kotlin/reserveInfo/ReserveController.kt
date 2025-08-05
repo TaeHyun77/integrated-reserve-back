@@ -22,7 +22,7 @@ class ReserveController(
 
     // 예약
     @PostMapping("/reserve")
-    fun reserveSeats(@RequestBody reserveRequest: ReserveRequest, request: ServerHttpRequest): ResponseEntity<String> {
+    suspend fun reserveSeats(@RequestBody reserveRequest: ReserveRequest, request: ServerHttpRequest): ResponseEntity<String> {
 
         val token = parsingToken(request)
 
@@ -36,7 +36,7 @@ class ReserveController(
 
     // 예약 취소
     @DeleteMapping("/delete/{reserveNumber}")
-    fun deleteReserveInfo(@PathVariable("reserveNumber") reserveNumber: String, request: ServerHttpRequest) {
+    suspend fun deleteReserveInfo(@PathVariable("reserveNumber") reserveNumber: String, request: ServerHttpRequest) {
 
         val idempotencyKey: String = request.headers.getFirst("Idempotency-key")
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_IN_HEADER_IDEMPOTENCY_KEY)

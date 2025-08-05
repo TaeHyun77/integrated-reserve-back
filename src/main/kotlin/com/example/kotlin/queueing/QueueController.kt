@@ -1,10 +1,15 @@
 package com.example.kotlin.queueing
 
 import com.example.kotlin.config.Loggable
+import com.example.kotlin.reserveException.ErrorCode
+import com.example.kotlin.reserveException.ReserveException
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.server.reactive.ServerHttpRequest
 import org.springframework.http.server.reactive.ServerHttpResponse
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -17,20 +22,24 @@ class QueueController (
     private val queueService: QueueService
 ): Loggable {
 
-    @PostMapping("/register")
+    @PostMapping("/register/{userId}/{queueType}")
     suspend fun registerUser(
-        @RequestParam queueType: String,
-        @RequestParam userId: String
-    ): ResponseEntity<Any> {
+        @PathVariable("userId") userId: String,
+        @PathVariable("queueType") queueType: String,
+        request: ServerHttpRequest
+    ): ResponseEntity<String> {
 
         val now = Instant.now()
         val enterTimestamp = now.epochSecond * 1_000_000_000L + now.nano
 
-        log.info { "등록 사용자 정보 ⇒ userId: $userId, queueType: $queueType enterTimestamp: $enterTimestamp" }
+        val idempotencyKey: String = request.headers["Idempotency-key"]?.firstOrNull()
+            ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_IN_HEADER_IDEMPOTENCY_KEY)
 
-        val result = queueService.registerUserToWaitQueue(userId, queueType, enterTimestamp)
+        log.info { "등록 사용자 정보 , userId: $userId, queueType: $queueType enterTimestamp: $enterTimestamp idempotencyKey : $idempotencyKey" }
 
-        return ResponseEntity.ok(result)
+        val result = queueService.register(userId, queueType, enterTimestamp, idempotencyKey)
+
+        return result
     }
 
     // 쿠키에 토큰 전달
@@ -63,6 +72,6 @@ class QueueController (
         @RequestParam(name = "queueCategory") queueCategory: String
     ): ResponseEntity<String> {
 
-        return queueService.cancelWaitOrAllowUser(userId, queueType.split(":")[0], queueCategory)
+        return queueService.cancelUser(userId, queueType.split(":")[0], queueCategory)
     }
 }

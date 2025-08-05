@@ -90,7 +90,7 @@ class MemberService(
         }
     }
 
-    fun earnRewardToday(token: String, today: LocalDate, idempotencyKey: String): ResponseEntity<String> {
+    suspend fun earnRewardToday(token: String, today: LocalDate, idempotencyKey: String): ResponseEntity<String> {
 
         val username = jwtUtil.getUsername(token)
 
