@@ -2,6 +2,8 @@ package com.example.kotlin.idempotency
 
 import com.example.kotlin.config.Loggable
 import com.example.kotlin.reserveException.ReserveException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -16,7 +18,7 @@ class IdempotencyService(
         url: String,
         method: String,
         process: suspend () -> String
-    ): ResponseEntity<String> {
+    ): ResponseEntity<String> = withContext(Dispatchers.IO) {
 
         val now = LocalDateTime.now()
         val idempotency = idempotencyRepository.findByIdempotencyKey(key)
@@ -32,7 +34,7 @@ class IdempotencyService(
                 responseBody = idempotency.responseBody
             )
 
-            return ResponseEntity
+            return@withContext ResponseEntity
                 .status(idempotencyRes.statusCode)
                 .body(idempotencyRes.responseBody)
         }
@@ -54,7 +56,7 @@ class IdempotencyService(
 
             log.info{"멱등성 키 저장 (성공 요청) - key: $key, message: $successMessage"}
 
-            return ResponseEntity
+            return@withContext ResponseEntity
                 .status(200)
                 .body(successMessage)
 
@@ -77,7 +79,7 @@ class IdempotencyService(
 
             log.info{"멱등성 키 저장 (실패 요청) - key: $key, message: $errorCode"}
 
-            return ResponseEntity
+            return@withContext ResponseEntity
                 .status(e.status)
                 .body(errorCode)
         }
