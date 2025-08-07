@@ -12,11 +12,15 @@ import com.example.kotlin.util.ACCESS_TOKEN
 import com.example.kotlin.util.ALLOW_QUEUE
 import com.example.kotlin.util.TOKEN_TTL_INFO
 import com.example.kotlin.util.WAIT_QUEUE
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.http.HttpStatus
@@ -33,6 +37,7 @@ import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.time.Duration
 import java.time.Instant
+import kotlin.system.measureTimeMillis
 
 @Service
 class QueueService (
@@ -74,14 +79,26 @@ class QueueService (
 
         log.info { "Current thread: ${Thread.currentThread().name}" }
 
-        val inWait = searchUserRanking(userId, queueType, "wait")
-        val inAllow = searchUserRanking(userId, queueType, "allow")
-        val waitQueueKey = queueType + WAIT_QUEUE
+        coroutineScope {
 
-        // 대기열 혹은 참가열에 존재한다면 에러 발생
-        if (inWait != -1L || inAllow != -1L) {
-            throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.ALREADY_REGISTERED_USER)
+            val waitTime = measureTimeMillis {
+
+                // 두 작업을 병렬로 실행
+                val inWaitDeferred = async { searchUserRanking(userId, queueType, "wait") }
+                val inAllowDeferred = async { searchUserRanking(userId, queueType, "allow") }
+
+                val inWait = inWaitDeferred.await()
+                val inAllow = inAllowDeferred.await()
+
+
+                if (inWait != -1L || inAllow != -1L) {
+                    throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.ALREADY_REGISTERED_USER)
+                }
+            }
+            log.info { "wait : $waitTime" }
         }
+
+        val waitQueueKey = queueType + WAIT_QUEUE
 
         val wasAdded = reactiveRedisTemplate.opsForZSet()
             .add(waitQueueKey, userId, enterTimestamp.toDouble())
@@ -89,9 +106,8 @@ class QueueService (
 
         if (wasAdded == null || !wasAdded) {
             throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.ALREADY_REGISTERED_USER)
-
-        // 대기열에 성공적으로 추가 되었다면 카프카 메세지 전송
         } else {
+            // 대기열에 성공적으로 추가 되었다면 카프카 메세지 전송
             sendEventToKafka(waitQueueKey, userId, "WAIT")
         }
 
@@ -364,13 +380,15 @@ class QueueService (
         val queueTypes = listOf("reserve_공연A", "reserve_공연B", "reserve_공연C")
 
         queueTypes.forEach { queueType ->
-            kotlinx.coroutines.GlobalScope.launch {
+
+            // 각 다른 대기열의 스케줄링을 병렬적으로 실행
+            CoroutineScope(Dispatchers.IO).launch {
                 val count = allowUser(queueType, maxAllowedUsers)
 
                 if (count > 0) {
-                    log.info{ "$queueType 허용열로 이동한 사용자 : $count" }
+                    log.info { "$queueType 허용열로 이동한 사용자 : $count" }
                 } else {
-                    log.info{ "$queueType 허용열로 이동한 사용자 : 0" }
+                    log.info { "$queueType 허용열로 이동한 사용자 : 0" }
                 }
             }
         }
