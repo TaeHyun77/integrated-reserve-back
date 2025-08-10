@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 
 private val log = KotlinLogging.logger {}
 
-@RequestMapping("/seat")
+@RequestMapping("/api/seat")
 @RestController
 class SeatController(
     private val seatService: SeatService

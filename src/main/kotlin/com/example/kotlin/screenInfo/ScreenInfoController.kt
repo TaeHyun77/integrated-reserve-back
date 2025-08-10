@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-@RequestMapping("/screenInfo")
+@RequestMapping("/api/screenInfo")
 @RestController
 class ScreenInfoController(
     private val screenInfoService: ScreenInfoService

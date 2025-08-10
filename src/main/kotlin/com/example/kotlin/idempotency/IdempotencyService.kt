@@ -13,12 +13,12 @@ class IdempotencyService(
     private val idempotencyRepository: IdempotencyRepository,
 ): Loggable {
 
-    suspend fun execute(
+    fun execute(
         key: String,
         url: String,
         method: String,
-        process: suspend () -> String
-    ): ResponseEntity<String> = withContext(Dispatchers.IO) {
+        process: () -> String
+    ): ResponseEntity<String> {
 
         val now = LocalDateTime.now()
         val idempotency = idempotencyRepository.findByIdempotencyKey(key)
@@ -34,7 +34,7 @@ class IdempotencyService(
                 responseBody = idempotency.responseBody
             )
 
-            return@withContext ResponseEntity
+            return ResponseEntity
                 .status(idempotencyRes.statusCode)
                 .body(idempotencyRes.responseBody)
         }
@@ -56,7 +56,7 @@ class IdempotencyService(
 
             log.info{"멱등성 키 저장 (성공 요청) - key: $key, message: $successMessage"}
 
-            return@withContext ResponseEntity
+            return ResponseEntity
                 .status(200)
                 .body(successMessage)
 
@@ -79,7 +79,7 @@ class IdempotencyService(
 
             log.info{"멱등성 키 저장 (실패 요청) - key: $key, message: $errorCode"}
 
-            return@withContext ResponseEntity
+            return ResponseEntity
                 .status(e.status)
                 .body(errorCode)
         }

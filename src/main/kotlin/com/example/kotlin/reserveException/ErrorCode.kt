@@ -42,8 +42,6 @@ enum class ErrorCode (
 
     NOT_ENOUGH_CREDIT("NOT_ENOUGH_CREDIT", "보유 금액이 부족합니다."),
 
-    INVALID_QUEUE_CATEGORY("INVALID_QUEUE_CATEGORY", "유효하지 않은 QUEUE CATEGORY 입니다."),
-
 
     // JOIN
     INVALID_USERNAME("INVALID_USERNAME", "유효하지 않은 username 값 입니다."),
@@ -54,10 +52,6 @@ enum class ErrorCode (
     // REWARD
     REWARD_ALREADY_CLAIMED("REWARD_ALREADY_CLAIMED", "오늘 이미 리워드를 지급받았습니다."),
 
-    // QUEUEING
-    ALREADY_REGISTERED_USER("ALREADY_REGISTERED_USER", "이미 등록된 사용자입니다."),
-
-    USER_NOT_FOUND_IN_THE_QUEUE("USER_NOT_FOUND_IN_THE_QUEUE", "열에서 찾을 수 없습니다."),
 
     // ECT
     FAIL_TO_SAVE_DATA("FAIL_TO_SAVE_DATA", "데이터 저장 실패"),
