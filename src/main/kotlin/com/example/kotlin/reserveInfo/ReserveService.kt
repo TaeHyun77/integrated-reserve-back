@@ -29,7 +29,7 @@ class ReserveService (
     /*
     * 멱등성 로직을 활용한 예약 로직
     * */
-    suspend fun reserveSeats(reserveRequest: ReserveRequest, token: String, idempotencyKey: String): ResponseEntity<String> {
+    fun reserveSeats(reserveRequest: ReserveRequest, token: String, idempotencyKey: String): ResponseEntity<String> {
 
         val username = jwtUtil.getUsername(token)
 
@@ -46,7 +46,7 @@ class ReserveService (
     }
 
     @Transactional
-    suspend fun doReserveSeats(reserveRequest: ReserveRequest, member: Member): String {
+    fun doReserveSeats(reserveRequest: ReserveRequest, member: Member): String {
 
         return try {
             val screenInfo = screenInfoRepository.findById(reserveRequest.screenInfoId)
@@ -115,7 +115,7 @@ class ReserveService (
     /*
     * 예약 취소 로직
     * */
-    suspend fun deleteReserveInfo(reserveNumber: String, idempotencyKey: String): ResponseEntity<String> {
+    fun deleteReserveInfo(reserveNumber: String, idempotencyKey: String): ResponseEntity<String> {
 
         val reserveInfo = reserveRepository.findByReservationNumber(reserveNumber)
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_RESERVE_INFO)

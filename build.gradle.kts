@@ -25,8 +25,8 @@ repositories {
 
 dependencies {
 
-	// WebFlux
-	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	// mvc
+	implementation("org.springframework.boot:spring-boot-starter-web")
 
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -68,8 +68,6 @@ dependencies {
 
 	// serializer
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
-
-	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
 }
 
 // querydsl QClass 위치

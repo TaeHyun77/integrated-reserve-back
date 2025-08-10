@@ -2,67 +2,76 @@ package com.example.kotlin.jwt
 
 import com.example.kotlin.refresh.RefreshRepository
 import io.jsonwebtoken.ExpiredJwtException
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseCookie
-import org.springframework.stereotype.Component
-import org.springframework.web.server.ServerWebExchange
-import org.springframework.web.server.WebFilter
-import org.springframework.web.server.WebFilterChain
-import reactor.core.publisher.Mono
+import jakarta.servlet.FilterChain
+import jakarta.servlet.ServletException
+import jakarta.servlet.ServletRequest
+import jakarta.servlet.ServletResponse
+import jakarta.servlet.http.Cookie
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import org.springframework.web.filter.GenericFilterBean
+import java.io.IOException
 
-@Component
-class CustomLogoutWebFilter(
+class CustomLogoutFilter(
     private val jwtUtil: JwtUtil,
     private val refreshRepository: RefreshRepository
-) : WebFilter {
+) : GenericFilterBean() {
 
-    override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
-        val request = exchange.request
-        val response = exchange.response
+    @Throws(IOException::class, ServletException::class)
+    override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
+        doFilter(request as HttpServletRequest, response as HttpServletResponse, chain)
+    }
 
-        // 로그아웃 경로가 아니면 필터 통과
-        if (request.uri.path != "/logout" || request.method != HttpMethod.POST) {
-            return chain.filter(exchange)
+    @Throws(IOException::class, ServletException::class)
+    private fun doFilter(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
+        val requestUri = request.requestURI
+
+        if (!requestUri.matches(Regex("^/logout$"))) {
+            filterChain.doFilter(request, response)
+            return
         }
 
-        val refreshCookie = request.cookies.getFirst("refresh")?.value
+        if (request.method != "POST") {
+            filterChain.doFilter(request, response)
+            return
+        }
 
-        if (refreshCookie == null) {
-            exchange.response.statusCode = HttpStatus.BAD_REQUEST
-            return exchange.response.setComplete()
+        val refresh = request.cookies?.firstOrNull { it.name == "refresh" }?.value
+
+        if (refresh == null) {
+            response.status = HttpServletResponse.SC_BAD_REQUEST
+            return
         }
 
         try {
-            jwtUtil.isExpired(refreshCookie)
+            jwtUtil.isExpired(refresh)
         } catch (e: ExpiredJwtException) {
-            exchange.response.statusCode = HttpStatus.BAD_REQUEST
-            return exchange.response.setComplete()
+            response.status = HttpServletResponse.SC_BAD_REQUEST
+            return
         }
 
-        val category = jwtUtil.getCategory(refreshCookie)
+        val category = jwtUtil.getCategory(refresh)
         if (category != "refresh") {
-            exchange.response.statusCode = HttpStatus.BAD_REQUEST
-            return exchange.response.setComplete()
+            response.status = HttpServletResponse.SC_BAD_REQUEST
+            return
         }
 
-        val exists = refreshRepository.existsByRefresh(refreshCookie)
-        if (!exists) {
-            response.statusCode = HttpStatus.BAD_REQUEST
-            return response.setComplete()
+        val isExist = refreshRepository.existsByRefresh(refresh)
+        if (!isExist) {
+            response.status = HttpServletResponse.SC_BAD_REQUEST
+            return
         }
 
-        refreshRepository.deleteByRefresh(refreshCookie)
+        // 로그아웃 처리
+        refreshRepository.deleteByRefresh(refresh)
 
-        val expiredCookie = ResponseCookie.from("refresh", "")
-            .path("/")
-            .maxAge(0)
-            .httpOnly(true)
-            .build()
+        //  refresh 쿠기 무효화
+        val cookie = Cookie("refresh", null).apply {
+            maxAge = 0
+            path = "/"
+        }
 
-        response.addCookie(expiredCookie)
-        response.statusCode = HttpStatus.OK
-
-        return response.setComplete()
+        response.addCookie(cookie)
+        response.status = HttpServletResponse.SC_OK
     }
 }
