@@ -44,6 +44,6 @@ Database/Cache : MySQL, Redis ( mutex 분산 락 )<br><br>
 ⇒ 트랜잭션 커밋 직전 또는 예외 발생 시점 → 로직이 모두 실행되고 나서야 실패<br><br>
 
 
-**구현**
+**분산락 구현과 JMeter 테스트**
 
 https://velog.io/@ayeah77/%EB%B6%84%EC%82%B0%EB%9D%BD-%EA%B5%AC%ED%98%84%EA%B3%BC-%ED%85%8C%EC%8A%A4%ED%8A%B8
