@@ -1,6 +1,4 @@
-<p align="center">
-  <img width="500" height="500" alt="Image" src="https://github.com/user-attachments/assets/ce06ebfe-b6f2-405f-a658-49ba16a6bdfd" />
-</p>
+
 
 <br>
 <p>티켓 예약 로직에서 좌석 선택 → 예약 → 결제 , 포인트 리워드 지급의 일련의 과정에서 멱등적인 API와 동시성을 다뤄보고 해결해보고자 하는 프로젝트입니다.</p>
@@ -116,3 +114,10 @@ https://velog.io/@ayeah77/%EB%B6%84%EC%82%B0%EB%9D%BD-%EA%B5%AC%ED%98%84%EA%B3%B
   **성공적으로 완료된 모습 !** <br><br>
   ![](https://velog.velcdn.com/images/ayeah77/post/b0601518-2732-4e6a-b610-6bf5941509e5/image.png)
 
+<br><br>
+### 데이터베이스 구조
+---
+
+<p align="center">
+  <img width="500" height="500" alt="Image" src="https://github.com/user-attachments/assets/ce06ebfe-b6f2-405f-a658-49ba16a6bdfd" />
+</p>
