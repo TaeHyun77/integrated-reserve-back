@@ -20,7 +20,7 @@ Backend : SpringBoot , Spring Data JPA, Kotlin
 
 Frontend : React, JavaScript
 
-Database/Cache : MySQL, Redis ( mutex 분산 락 )<br><br>
+Database/Cache : MySQL, Redis <u>( mutex 분산 락 )</u><br><br>
 
 ### 동시성 이슈
 
