@@ -50,6 +50,8 @@ Database/Cache : MySQL, Redis ( mutex 분산 락 )<br><br>
 ### 분산락 구현과 JMeter 테스트
 ---
 
+기존 스핀락 방식에서 Redisson을 사용한 분산락 방식으로 변경하였습니다.
+
 Redisson 방식 : https://velog.io/@ayeah77/Lock-%EB%B0%A9%EC%8B%9D-%EB%B3%80%EA%B2%BD-%EB%B0%8F-%ED%85%8C%EC%8A%A4%ED%8A%B8
 
 스핀락 방식 : https://velog.io/@ayeah77/%EB%B6%84%EC%82%B0%EB%9D%BD-%EA%B5%AC%ED%98%84%EA%B3%BC-%ED%85%8C%EC%8A%A4%ED%8A%B8
