@@ -1,13 +1,7 @@
 package com.example.kotlin.performance
 
 import com.example.kotlin.screenInfo.ScreenInfo
-import jakarta.persistence.CascadeType
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.OneToMany
+import jakarta.persistence.*
 
 @Entity
 class Performance(

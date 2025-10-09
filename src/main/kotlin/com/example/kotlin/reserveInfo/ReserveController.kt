@@ -5,6 +5,7 @@ import com.example.kotlin.util.parsingToken
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -17,12 +18,20 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/reserve")
 @RestController
 class ReserveController(
-    private val reserveService: ReserveService
+    private val reserveService: ReserveService,
+    @Value("\${SERVER_NAME}")
+    private val serverName: String? = null
+
 ): Loggable {
 
     // 예약
     @PostMapping("/reserve")
-    fun reserveSeats(@RequestBody reserveRequest: ReserveRequest, request: HttpServletRequest): ResponseEntity<String> {
+    fun reserveSeats(
+        @RequestBody reserveRequest: ReserveRequest,
+        request: HttpServletRequest
+    ): ResponseEntity<String> {
+
+        log.info { "server_name: $serverName" }
 
         val token = parsingToken(request)
 
@@ -36,7 +45,10 @@ class ReserveController(
 
     // 예약 취소
     @DeleteMapping("/delete/{reserveNumber}")
-    fun deleteReserveInfo(@PathVariable("reserveNumber") reserveNumber: String, request: HttpServletRequest) {
+    fun deleteReserveInfo(
+        @PathVariable("reserveNumber") reserveNumber: String,
+        request: HttpServletRequest
+    ) {
 
         val idempotencyKey: String = request.getHeader("Idempotency-key")
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_IN_HEADER_IDEMPOTENCY_KEY)
@@ -44,7 +56,5 @@ class ReserveController(
         log.info { "idempotencyKey: $idempotencyKey" }
 
         reserveService.deleteReserveInfo(reserveNumber, idempotencyKey)
-
     }
-
 }
