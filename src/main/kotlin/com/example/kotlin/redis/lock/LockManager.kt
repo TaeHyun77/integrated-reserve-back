@@ -1,35 +1,68 @@
 package com.example.kotlin.redis.lock
 
-import org.springframework.data.redis.core.RedisTemplate
+import com.example.kotlin.config.Loggable
+import org.redisson.api.RLock
+import org.redisson.api.RedissonClient
 import org.springframework.stereotype.Component
-import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 @Component
 class LockManager(
-    private val redisTemplate: RedisTemplate<String, String>
-) {
+    private val redissonClient: RedissonClient
+): Loggable{
 
-    // setIfAbsent : Redis의 SETNX 명령 → 해당 key가 Redis에 없을 때만 값을 설정
-    // 키가 이미 존재하면 false, 없으면 true를 반환, 예외가 발생하면 null 반환, TTL은 3초로
-    // 뮤텍스 방식으로 구현 :
-    fun tryMutexLock(
-        key: String, maxWaitMillis: Long = 3000, retryDelayMillis: Long = 100
-    ): Boolean {
-        val start = System.currentTimeMillis()
+    /**
+     * 단일 키에 대한 락
+     */
+    fun tryLock(
+        key: String,
+        waitTime: Long = 3,
+        leaseTime: Long = 5,
+        timeUnit: TimeUnit = TimeUnit.SECONDS
+    ): RLock? {
+        val lock = redissonClient.getLock(key)
 
-        // 최대 3초까지 wait 하다가 lock을 얻지 못하면 false 반환
-        while (System.currentTimeMillis() - start < maxWaitMillis) {
-            val success = redisTemplate.opsForValue().setIfAbsent(key, "lock", Duration.ofSeconds(5)) == true
-
-            if (success) {
-                return true // 락 획득 성공
-            }
-
-            Thread.sleep(retryDelayMillis) // 0.1초 기다렸다가 다시 시도 ( Blocking Polling )
+        return if (lock.tryLock(waitTime, leaseTime, timeUnit)) {
+            log.info { "Lock 획득 성공 - key: $key" }
+            lock // lock 객체 반환
+        } else {
+            null
         }
-
-        return false // 최대 대기 시간 초과된 것
     }
 
-    fun unlock(key: String): Boolean = redisTemplate.delete(key)
+    /**
+     * 여러 키에 대한 멀티락
+     */
+    fun tryMultiLock(
+        keys: List<String>,
+        waitTime: Long = 3,
+        leaseTime: Long = 5,
+        timeUnit: TimeUnit = TimeUnit.SECONDS
+    ): RLock? {
+
+        // 특정 key들에 대한 Rock 객체
+        val locks = keys.map { redissonClient.getLock(it) }
+
+        val multiLock = redissonClient.getMultiLock(*locks.toTypedArray())
+
+        return if (multiLock.tryLock(waitTime, leaseTime, timeUnit)) {
+            log.info { "MultiLock 획득 성공 - keys: $keys" }
+            multiLock // lock 객체 반환
+        } else {
+            null
+        }
+    }
+
+    fun unlock(lock: RLock?) {
+        if (lock == null) return
+
+        try {
+            lock.unlock()
+            log.info { "Lock 반환 성공" }
+        } catch (e: IllegalMonitorStateException) {
+            log.warn { "Lock 이미 해제되었거나 소유하지 않음 - ${e.message}" }
+        } catch (e: Exception) {
+            log.error(e) { "Lock 해제 실패" }
+        }
+    }
 }

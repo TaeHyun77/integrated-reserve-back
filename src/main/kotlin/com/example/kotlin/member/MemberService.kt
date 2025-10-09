@@ -20,6 +20,7 @@ class MemberService(
     private val passwordEncoder: PasswordEncoder,
     private val jwtUtil: JwtUtil,
     private val idempotencyService: IdempotencyService,
+    private val redisLockUtil: RedisLockUtil
 
 ): Loggable {
 
@@ -97,7 +98,8 @@ class MemberService(
         val member = memberRepository.findByUsername(username)
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_MEMBER_INFO)
 
-        return RedisLockUtil.acquireLockAndRun("${today}:${member.username}:earnReward") {
+        // username은 중복되지 않기 때문에 락 키로 사용 가능
+        return redisLockUtil.acquireLockAndRun("${today}:${member.username}:earnReward") {
             idempotencyService.execute(
                 key = idempotencyKey,
                 url = "/member/reward",

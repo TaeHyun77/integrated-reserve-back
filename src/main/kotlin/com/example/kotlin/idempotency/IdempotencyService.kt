@@ -2,8 +2,6 @@ package com.example.kotlin.idempotency
 
 import com.example.kotlin.config.Loggable
 import com.example.kotlin.reserveException.ReserveException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -23,7 +21,7 @@ class IdempotencyService(
         val now = LocalDateTime.now()
         val idempotency = idempotencyRepository.findByIdempotencyKey(key)
 
-        // 유효 기간이 지나지 않은 동일 요청이 있는 경우
+        // 유효 기간이 지나지 않은 동일 요청이 있는 경우 저장된 응답 반환
         if (idempotency != null && idempotency.expires_at.isAfter(now)) {
 
             log.info { "동일한 Idempotent 요청 감지됨 - 저장된 이전 응답 반환" }
@@ -39,7 +37,6 @@ class IdempotencyService(
                 .body(idempotencyRes.responseBody)
         }
 
-        // 성공했을 때
         try {
             val successMessage = process()  // 성공 결과 메시지 or 예외
 
@@ -54,13 +51,12 @@ class IdempotencyService(
                 )
             )
 
-            log.info{"멱등성 키 저장 (성공 요청) - key: $key, message: $successMessage"}
+            log.info{"멱등성 키 저장 ( 성공 요청 ) - key: $key, message: $successMessage"}
 
             return ResponseEntity
                 .status(200)
                 .body(successMessage)
 
-        // 실패했을 때
         } catch (e: ReserveException) {
 
             val errorStatus = e.status.value()

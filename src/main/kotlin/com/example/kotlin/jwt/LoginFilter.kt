@@ -57,7 +57,7 @@ class LoginFilter(
 
         createRefresh(username, refresh, 60 * 60 * 1000)
 
-        response.setHeader("access", accessToken)
+        response.setHeader("Authorization", accessToken)
         response.addCookie(createCookie("refresh", refresh))
         response.status = HttpStatus.OK.value()
     }

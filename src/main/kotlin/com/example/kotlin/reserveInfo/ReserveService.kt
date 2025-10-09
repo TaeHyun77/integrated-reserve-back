@@ -8,6 +8,7 @@ import com.example.kotlin.member.MemberRepository
 import com.example.kotlin.redis.lock.RedisLockUtil
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
+import com.example.kotlin.screenInfo.ScreenInfo
 import com.example.kotlin.screenInfo.ScreenInfoRepository
 import com.example.kotlin.seat.Seat
 import com.example.kotlin.seat.SeatRepository
@@ -24,6 +25,7 @@ class ReserveService (
     private val screenInfoRepository: ScreenInfoRepository,
     private val idempotencyService: IdempotencyService,
     private val jwtUtil: JwtUtil,
+    private val redisLockUtil: RedisLockUtil
 ): Loggable {
 
     /*
@@ -36,7 +38,11 @@ class ReserveService (
         val member = memberRepository.findByUsername(username)
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_MEMBER_INFO)
 
-        return RedisLockUtil.acquireLockAndRun("${reserveRequest.reservationNumber}:${reserveRequest.screenInfoId}:doReserve")
+        // 특정 screenInfoId의 좌석을 lock 키로 설정
+        // 데드락을 방지하기 위해 정렬
+        val lockKeys: List<String> = reserveRequest.seats.sorted().map { "lock:${reserveRequest.screenInfoId}:seat:${it}" }
+
+        return redisLockUtil.acquireMultiLockAndRun(lockKeys)
         { idempotencyService.execute(
             key = idempotencyKey,
             url = "/seat/reserve",
@@ -49,24 +55,19 @@ class ReserveService (
     fun doReserveSeats(reserveRequest: ReserveRequest, member: Member): String {
 
         return try {
+
             val screenInfo = screenInfoRepository.findById(reserveRequest.screenInfoId)
                 .orElseThrow {
                     throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_SCREEN_INFO)
                 }
 
-            val totalPrice = screenInfo.performance.price * reserveRequest.seats.size
-            val rewardDiscount = reserveRequest.rewardDiscount
-            val finalPrice = totalPrice - rewardDiscount
-
-            if (finalPrice > member.credit) {
-                log.info {"잔액 부족 - 사용자: ${member.username}, 필요 금액: $finalPrice, 보유: ${member.credit}"}
-                throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_ENOUGH_CREDIT)
-            }
-
-            // 좌석 예약 가능 검증
+            // 이미 예약된 좌석인지 체크
             val seats = reserveRequest.seats.map { seatNumber ->
                 findAndValidateSeat(screenInfo.id, seatNumber, member)
             }
+
+            // 비용 계산 및 검증
+            val (totalPrice, rewardDiscount, finalPrice) = validateAndCalculatePrice(screenInfo, reserveRequest, member)
 
             // 모든 좌석이 예약 가능할 때 비용 차감
             member.updateCreditAndReward(finalPrice, rewardDiscount)
@@ -112,6 +113,20 @@ class ReserveService (
         return seat
     }
 
+    fun validateAndCalculatePrice(screenInfo: ScreenInfo, reserveRequest: ReserveRequest, member: Member): Triple<Long, Long, Long> {
+
+        val totalPrice = screenInfo.performance.price * reserveRequest.seats.size
+        val rewardDiscount = reserveRequest.rewardDiscount
+        val finalPrice = totalPrice - rewardDiscount
+
+        if (finalPrice > member.credit) {
+            log.info {"잔액 부족 - 사용자: ${member.username}, 필요 금액: $finalPrice, 보유: ${member.credit}"}
+            throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_ENOUGH_CREDIT)
+        }
+
+        return Triple(totalPrice, rewardDiscount, finalPrice)
+    }
+
     /*
     * 예약 취소 로직
     * */
@@ -123,7 +138,7 @@ class ReserveService (
         val member = memberRepository.findByUsername(reserveInfo.member.username)
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_MEMBER_INFO)
 
-        return RedisLockUtil.acquireLockAndRun("${member.username}:${reserveNumber}:doDelete") {
+        return redisLockUtil.acquireLockAndRun("${member.username}:${reserveNumber}:doDelete") {
             idempotencyService.execute(
                 key = idempotencyKey,
                 url = "/reserve/delete",
@@ -147,7 +162,7 @@ class ReserveService (
             member.reward += reserveInfo.rewardDiscount
             memberRepository.save(member)
 
-            // 좌석 초기화
+            // 좌석 상태 초기화
             reserveInfo.seats.forEach { seatNumber ->
 
                 val seat = seatRepository.findByScreenInfoAndSeatNumber(reserveInfo.screenInfoId, seatNumber)

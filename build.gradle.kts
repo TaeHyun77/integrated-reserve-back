@@ -59,15 +59,9 @@ dependencies {
 	// redis
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
-	// kafka 의존성
-	implementation ("org.springframework.kafka:spring-kafka")
 
-	// 코루틴
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3")
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.6.3")
-
-	// serializer
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+	// Redisson 라이브러리 의존성
+	implementation("org.redisson:redisson-spring-boot-starter:3.18.0")
 }
 
 // querydsl QClass 위치
