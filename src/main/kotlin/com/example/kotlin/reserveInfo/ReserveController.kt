@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class ReserveController(
     private val reserveService: ReserveService,
-    @Value("\${SERVER_NAME}")
-    private val serverName: String? = null
+    // @Value("\${SERVER_NAME}")
+    // private val serverName: String? = null
 
 ): Loggable {
 
@@ -31,7 +31,7 @@ class ReserveController(
         request: HttpServletRequest
     ): ResponseEntity<String> {
 
-        log.info { "server_name: $serverName" }
+        // log.info { "server_name: $serverName" }
 
         val token = parsingToken(request)
 
