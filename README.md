@@ -6,6 +6,10 @@
 동시성 문제가 발생할 수 있는 예약, 예약 취소, 리워드 지급 등의 핵심 로직에 Redis 분산 락 ~~( mutex )~~ Redisson 기반의 분산락을 사용하여 충돌을 방지했습니다.<br>
 
 <p>Front 리포지토리 : https://github.com/TaeHyun77/reserve-project-front.git</p>
+
+<p>구현 과정 :
+https://velog.io/@ayeah77/series/%EC%98%88%EC%95%BD-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8
+</p>
 <br>
 
 ### 시연 영상
