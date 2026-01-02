@@ -1,15 +1,15 @@
 package com.example.kotlin
 
-import com.example.kotlin.performance.PerformanceRepository
-import com.example.kotlin.performance.PerformanceRequest
+import com.example.kotlin.performance.repository.PerformanceRepository
+import com.example.kotlin.performance.dto.PerformanceRequest
 import com.example.kotlin.performance.PerformanceService
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
-import com.example.kotlin.screenInfo.ScreenInfo
-import com.example.kotlin.screenInfo.ScreenInfoRepository
+import com.example.kotlin.performanceSchedule.PerformanceSchedule
+import com.example.kotlin.performanceSchedule.repository.PerformanceScheduleRepository
 import com.example.kotlin.venue.Venue
 import com.example.kotlin.venue.VenueRepository
-import com.example.kotlin.venue.VenueRequest
+import com.example.kotlin.venue.dto.VenueReqDto
 import com.example.kotlin.venue.VenueService
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.assertThrows
@@ -29,7 +29,7 @@ class VenueAndPerformanceTest {
     lateinit var venueRepository: VenueRepository
 
     @Autowired
-    lateinit var screenInfoRepository: ScreenInfoRepository
+    lateinit var performanceScheduleRepository: PerformanceScheduleRepository
 
     @Autowired
     lateinit var performanceService: PerformanceService
@@ -41,7 +41,7 @@ class VenueAndPerformanceTest {
     fun `venue 등록 테스트`() {
 
         // given
-        val venueTestRequest = VenueRequest(
+        val venueTestRequest = VenueReqDto(
             name = "test_name",
             location = "test_location"
         )
@@ -76,8 +76,8 @@ class VenueAndPerformanceTest {
 
         val performance = performanceService.registerPerformance(createDummyPerformanceRequest())
 
-        val screen = screenInfoRepository.save(
-            ScreenInfo(
+        val screen = performanceScheduleRepository.save(
+            PerformanceSchedule(
                 venue = venue,
                 performance = performance,
                 screeningDate = LocalDate.now().minusDays(3),
@@ -104,8 +104,8 @@ class VenueAndPerformanceTest {
         val venue = venueRepository.save(Venue(name = "테스트극장", location = "서울"))
         val performance = performanceService.registerPerformance(createDummyPerformanceRequest())
 
-        screenInfoRepository.save(
-            ScreenInfo(
+        performanceScheduleRepository.save(
+            PerformanceSchedule(
                 venue = venue,
                 performance = performance,
                 screeningDate = LocalDate.now(),
@@ -129,8 +129,8 @@ class VenueAndPerformanceTest {
         val venue = venueRepository.save(Venue(name = "테스트극장", location = "서울"))
         val performance = performanceService.registerPerformance(createDummyPerformanceRequest())
 
-        screenInfoRepository.save(
-            ScreenInfo(
+        performanceScheduleRepository.save(
+            PerformanceSchedule(
                 venue = venue,
                 performance = performance,
                 screeningDate = LocalDate.now(),

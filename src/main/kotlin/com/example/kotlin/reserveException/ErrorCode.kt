@@ -16,7 +16,7 @@ enum class ErrorCode (
 
     NOT_EXIST_PERFORMANCE_INFO("NOT_EXIST_PERFORMANCE_INFO", "공연 정보를 찾을 수 없습니다."),
 
-    NOT_EXIST_SCREEN_INFO("NOT_EXIST_SCREEN_INFO", "상영 정보를 찾을 수 없습니다."),
+    NOT_EXIST_PERFORMANCE_SCHEDULE("NOT_EXIST_PERFORMANCE_SCHEDULE", "공연 정보를 찾을 수 없습니다."),
 
     NOT_EXIST_SEAT_INFO("NOT_EXIST_SEAT_INFO", "좌석 정보를 찾을 수 없습니다."),
 
@@ -58,7 +58,7 @@ enum class ErrorCode (
 
     CANNOT_DELETE_SOME_SCREENING_HAVE_NOT_YET_ENDED("CANNOT_DELETE_SOME_SCREENING_HAVE_NOT_YET_ENDED", "아직 종료되지 않은 상영 정보가 있어 삭제할 수 없습니다."),
 
-    REDIS_FAILED_TO_ACQUIRED_LOCK("REDIS_FAILED_TO_ACQUIRED_LOCK", "레디스에서 Lock을 획득 실패"),
+    FAILED_TO_ACQUIRED_LOCK("REDIS_FAILED_TO_ACQUIRED_LOCK", "레디스에서 Lock을 획득 실패"),
 
-    REDIS_NOT_EXIST_LOCK_KEY("REDIS_NOT_EXIST_LOCK_KEY", "레디스 lock 키가 존재하지 않습니다.");
+    NOT_EXIST_LOCK_KEY("REDIS_NOT_EXIST_LOCK_KEY", "레디스 lock 키가 존재하지 않습니다.");
 }

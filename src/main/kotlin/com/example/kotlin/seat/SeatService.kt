@@ -1,13 +1,16 @@
 package com.example.kotlin.seat
 
 import com.example.kotlin.config.Loggable
-import com.example.kotlin.performance.PerformanceRepository
-import com.example.kotlin.performance.PerformanceResponse
+import com.example.kotlin.performance.repository.PerformanceRepository
+import com.example.kotlin.performance.dto.PerformanceResponse
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
-import com.example.kotlin.screenInfo.ScreenInfo
-import com.example.kotlin.screenInfo.ScreenInfoRepository
-import com.example.kotlin.screenInfo.ScreenInfoResponse
+import com.example.kotlin.performanceSchedule.PerformanceSchedule
+import com.example.kotlin.performanceSchedule.repository.PerformanceScheduleRepository
+import com.example.kotlin.performanceSchedule.dto.PerformanceScheduleResponse
+import com.example.kotlin.seat.dto.SeatRequest
+import com.example.kotlin.seat.dto.SeatResponse
+import com.example.kotlin.seat.repository.SeatRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -15,14 +18,14 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class SeatService(
     private val seatRepository: SeatRepository,
-    private val screenInfoRepository: ScreenInfoRepository,
+    private val performanceScheduleRepository: PerformanceScheduleRepository,
     private val performanceRepository: PerformanceRepository,
     ): Loggable {
 
     @Transactional
     fun initSeats(seatRequest: SeatRequest) {
 
-        val screenInfo: ScreenInfo = screenInfoRepository.findById(seatRequest.screenInfoId)
+        val performanceSchedule: PerformanceSchedule = performanceScheduleRepository.findById(seatRequest.screenInfoId)
             .orElseThrow { throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_SCREEN_INFO) }
 
         val seats = mutableListOf<Seat>()
@@ -34,7 +37,7 @@ class SeatService(
                 val seat = Seat(
                     seatNumber = seatNumber,
                     is_reserved = false,
-                    screenInfo = screenInfo
+                    performanceSchedule = performanceSchedule
                 )
 
                 seats.add(seat)
@@ -52,19 +55,19 @@ class SeatService(
             val seats = seatRepository.findSeatByScreenInfoId(screenInfoId)
 
             return seats.map {
-                SeatResponse (
+                SeatResponse(
                     seatNumber = it.seatNumber,
                     is_reserved = it.is_reserved,
-                    screenInfo = ScreenInfoResponse(
+                    screenInfo = PerformanceScheduleResponse(
                         performance = PerformanceResponse(
-                            type = it.screenInfo.performance.type,
-                            title = it.screenInfo.performance.title,
-                            duration = it.screenInfo.performance.duration,
-                            price = it.screenInfo.performance.price
+                            type = it.performanceSchedule.performance.type,
+                            title = it.performanceSchedule.performance.title,
+                            duration = it.performanceSchedule.performance.duration,
+                            price = it.performanceSchedule.performance.price
                         ),
-                        screeningDate = it.screenInfo.screeningDate,
-                        startTime = it.screenInfo.startTime,
-                        endTime = it.screenInfo.endTime
+                        screeningDate = it.performanceSchedule.screeningDate,
+                        startTime = it.performanceSchedule.startTime,
+                        endTime = it.performanceSchedule.endTime
                     )
                 )
             }

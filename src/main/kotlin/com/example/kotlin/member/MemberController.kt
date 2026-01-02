@@ -1,13 +1,14 @@
 package com.example.kotlin.member
 
 import com.example.kotlin.config.Loggable
+import com.example.kotlin.member.dto.MemberRequest
+import com.example.kotlin.member.dto.MemberResponse
 import com.example.kotlin.util.parsingToken
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.http.server.reactive.ServerHttpRequest
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -24,7 +25,7 @@ class MemberController(
 
     // 로그인 사용자 정보 조회
     @GetMapping("/info")
-    fun memberInfo(request: HttpServletRequest): ResponseEntity<MemberResponse> {
+    fun memberInfo(request: HttpServletRequest): MemberResponse {
 
         val token = parsingToken(request)
 

@@ -1,5 +1,8 @@
 package com.example.kotlin.performance
 
+import com.example.kotlin.performance.dto.PerformanceRequest
+import com.example.kotlin.performance.dto.PerformanceResponse
+import com.example.kotlin.performance.repository.PerformanceRepository
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -32,12 +35,12 @@ class PerformanceService(
 
         val now = LocalDateTime.now()
 
-        val deletableScreenInfos = performance.screenInfoList.filter {
+        val deletableScreenInfos = performance.performanceScheduleList.filter {
             it.endTime.isBefore(now)
         }
 
         // 남아 있는 screenInfo가 있으면 삭제 금지
-        if (performance.screenInfoList.size != deletableScreenInfos.size) {
+        if (performance.performanceScheduleList.size != deletableScreenInfos.size) {
             throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.CANNOT_DELETE_SOME_SCREENING_HAVE_NOT_YET_ENDED)
         }
 
@@ -57,7 +60,7 @@ class PerformanceService(
                 title = performance.title,
                 duration = performance.duration,
                 price = performance.price,
-                screenInfoList = performance.screenInfoList.map { screenInfo ->
+                screenInfoList = performance.performanceScheduleList.map { screenInfo ->
                     ScreenInfoListResponse(
                         venueId = screenInfo.venue.id,
                         performanceId = screenInfo.performance.id,

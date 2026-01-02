@@ -1,5 +1,7 @@
 package com.example.kotlin.venue
 
+import com.example.kotlin.venue.dto.VenueReqDto
+import com.example.kotlin.venue.dto.VenueResDto
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -15,12 +17,12 @@ class VenueController(
 ) {
 
     @PostMapping("/register")
-    fun registerVenue(@RequestBody venueRequest: VenueRequest): Venue {
-        return venueService.registerVenue(venueRequest)
+    fun registerVenue(@RequestBody venueReqDto: VenueReqDto): Venue {
+        return venueService.registerVenue(venueReqDto)
     }
 
     @GetMapping("/list")
-    fun venueList(): List<VenueResponse> {
+    fun venueList(): List<VenueResDto> {
         return venueService.venueList()
     }
 

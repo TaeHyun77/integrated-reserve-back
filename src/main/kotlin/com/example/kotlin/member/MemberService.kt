@@ -3,10 +3,12 @@ package com.example.kotlin.member
 import com.example.kotlin.idempotency.IdempotencyService
 import com.example.kotlin.config.Loggable
 import com.example.kotlin.jwt.JwtUtil
+import com.example.kotlin.member.dto.MemberRequest
+import com.example.kotlin.member.dto.MemberResponse
 import com.example.kotlin.redis.lock.RedisLockUtil
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
-import com.example.kotlin.reserveInfo.ReserveInfoResponse
+import com.example.kotlin.reserve.dto.ReserveResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -24,55 +26,35 @@ class MemberService(
 
 ): Loggable {
 
-    @Transactional(readOnly = true)
-    fun memberInfo(token: String): ResponseEntity<MemberResponse> {
+    fun memberInfo(
+        token: String
+    ): MemberResponse {
 
         val username = jwtUtil.getUsername(token)
+        val member = getMemberByUsername(username)
+        val memberInfo = MemberResponse.from(member)
 
-        val member = memberRepository.findByUsername(username)
-            ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_MEMBER_INFO)
-
-        val result = MemberResponse(
-            id = member.id,
-            username = member.username,
-            name = member.name,
-            role = member.role,
-            email = member.email,
-            last_reward_date = member.last_reward_date,
-            reward = member.reward,
-            credit = member.credit,
-            reserveList = member.reserveList?.map {
-                ReserveInfoResponse(
-                    reservationNumber = it.reservationNumber,
-                    totalPrice = it.totalPrice,
-                    rewardDiscount = it.rewardDiscount,
-                    finalPrice = it.finalPrice,
-                    createdAt = it.createdAt,
-                    seats = it.seats,
-                    startTime = it.startTime,
-                    endTime = it.endTime
-                )
-            },
-        )
-
-        return ResponseEntity.ok(result)
+        return memberInfo
     }
 
     @Transactional
-    fun saveMember(memberRequest: MemberRequest): Member {
+    fun saveMember(
+        memberRequest: MemberRequest
+    ): Member {
 
-        return try {
-            val exists = memberRepository.existsByUsername(memberRequest.username)
-
-            if (exists) throw ReserveException(HttpStatus.CONFLICT, ErrorCode.DUPLICATED_USERNAME)
-
-            val encodedPassword = passwordEncoder.encode(memberRequest.password)
-
-            memberRepository.save(memberRequest.toEntity(encodedPassword))
-        } catch (e: ReserveException) {
-            throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.FAIL_TO_SAVE_DATA)
+        if (memberRepository.existsByUsername(memberRequest.username)) {
+            throw ReserveException(
+                HttpStatus.CONFLICT, ErrorCode.DUPLICATED_USERNAME
+            )
         }
+
+        val encodedPassword = passwordEncoder.encode(memberRequest.password)
+
+        return memberRepository.save(
+            memberRequest.toEntity(encodedPassword)
+        )
     }
+
 
     fun checkUsername(username: CheckUsername): ResponseEntity<UsernameCheckResponse> {
 
@@ -129,6 +111,11 @@ class MemberService(
             log.info {"리워드 지급 실패 - 날짜 : ${today}, 사용자: ${member.username}, 원인: ${e.errorCode}"}
             throw e
         }
+    }
+
+    fun getMemberByUsername(username: String): Member {
+        return memberRepository.findByUsername(username)
+            ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_MEMBER_INFO)
     }
 }
 

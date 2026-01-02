@@ -2,7 +2,7 @@ package com.example.kotlin
 
 import com.example.kotlin.member.CheckUsername
 import com.example.kotlin.member.MemberRepository
-import com.example.kotlin.member.MemberRequest
+import com.example.kotlin.member.dto.MemberRequest
 import com.example.kotlin.member.MemberService
 import org.assertj.core.api.BDDAssertions.then
 import org.springframework.beans.factory.annotation.Autowired

@@ -1,6 +1,8 @@
 package com.example.kotlin.seat
 
 import com.example.kotlin.config.Loggable
+import com.example.kotlin.seat.dto.SeatRequest
+import com.example.kotlin.seat.dto.SeatResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping

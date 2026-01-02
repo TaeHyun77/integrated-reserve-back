@@ -1,6 +1,8 @@
 package com.example.kotlin.performance
 
 import com.example.kotlin.config.Loggable
+import com.example.kotlin.performance.dto.PerformanceRequest
+import com.example.kotlin.performance.dto.PerformanceResponse
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable

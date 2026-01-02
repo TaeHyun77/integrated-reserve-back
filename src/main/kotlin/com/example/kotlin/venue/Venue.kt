@@ -1,6 +1,6 @@
 package com.example.kotlin.venue
 
-import com.example.kotlin.screenInfo.ScreenInfo
+import com.example.kotlin.performanceSchedule.PerformanceSchedule
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -22,5 +22,5 @@ class Venue (
     val location: String,
 
     @OneToMany(mappedBy = "venue", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val screenInfoList: List<ScreenInfo> = ArrayList()
+    val performanceScheduleList: List<PerformanceSchedule> = ArrayList()
 )

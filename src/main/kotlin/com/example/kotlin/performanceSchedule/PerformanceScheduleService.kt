@@ -1,0 +1,70 @@
+package com.example.kotlin.performanceSchedule
+
+import com.example.kotlin.performance.Performance
+import com.example.kotlin.performance.repository.PerformanceRepository
+import com.example.kotlin.performance.dto.PerformanceResponse
+import com.example.kotlin.venue.Venue
+import com.example.kotlin.venue.VenueRepository
+import com.example.kotlin.reserveException.ErrorCode
+import com.example.kotlin.reserveException.ReserveException
+import com.example.kotlin.performanceSchedule.dto.PerformanceScheduleRequest
+import com.example.kotlin.performanceSchedule.dto.PerformanceScheduleResponse
+import com.example.kotlin.performanceSchedule.repository.PerformanceScheduleRepository
+import org.springframework.http.HttpStatus
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+
+@Service
+class PerformanceScheduleService(
+    private val performanceScheduleRepository: PerformanceScheduleRepository,
+    private val venueRepository: VenueRepository,
+    private val performanceRepository: PerformanceRepository
+) {
+
+    @Transactional
+    fun registerScreen(performanceScheduleRequest: PerformanceScheduleRequest) {
+
+        val venue: Venue = venueRepository.findById(performanceScheduleRequest.venueId)
+            .orElseThrow { throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_PLACE_INFO) }
+
+        val performance: Performance = performanceRepository.findById(performanceScheduleRequest.performanceId)
+            .orElseThrow { throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_PERFORMANCE_INFO) }
+
+        try {
+            performanceScheduleRepository.save(performanceScheduleRequest.toScreen(venue, performance))
+        } catch (e: ReserveException) {
+            throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.FAIL_TO_SAVE_DATA)
+        }
+    }
+
+    fun screenList(venueId: Long, performanceId: Long): List<PerformanceScheduleResponse> {
+
+        val screenInfos = performanceScheduleRepository.findScreenInfoListByVenueIdAndPerformanceId(venueId, performanceId)
+            ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_SCREEN_INFO)
+
+        return screenInfos.map {
+            val performance = PerformanceResponse(
+                id = it.performance.id,
+                type = it.performance.type,
+                title = it.performance.title,
+                duration = it.performance.duration,
+                price = it.performance.price
+            )
+
+            PerformanceScheduleResponse(
+                id = it.id,
+                performance = performance,
+                screeningDate = it.screeningDate,
+                startTime = it.startTime,
+                endTime = it.endTime
+            )
+        }
+    }
+
+    fun getPerformanceSchedule(performanceScheduleId: Long): PerformanceSchedule {
+        return performanceScheduleRepository.findById(performanceScheduleId)
+            .orElseThrow {
+                ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_PERFORMANCE_INFO)
+            }
+    }
+}

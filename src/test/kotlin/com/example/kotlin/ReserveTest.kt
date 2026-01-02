@@ -2,9 +2,9 @@ package com.example.kotlin
 
 import com.example.kotlin.jwt.JwtUtil
 import com.example.kotlin.reserveException.ReserveException
-import com.example.kotlin.reserveInfo.ReserveRequest
-import com.example.kotlin.reserveInfo.ReserveService
-import com.example.kotlin.seat.SeatRepository
+import com.example.kotlin.reserve.dto.ReserveRequest
+import com.example.kotlin.reserve.ReserveService
+import com.example.kotlin.seat.repository.SeatRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -71,7 +71,7 @@ class ReserveTest {
         val reservedSeat = seatRepository.findByScreenInfoAndSeatNumber(screenInfoId, seatNumber)
         assertEquals(true, reservedSeat?.is_reserved)
 
-        val reservedUsername = reservedSeat?.reserveInfo?.member?.username
+        val reservedUsername = reservedSeat?.reserve?.member?.username
         println("좌석 예약자: $reservedUsername")
     }
 }

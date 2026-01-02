@@ -14,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.AuthenticationException
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import java.time.LocalDateTime
 
 class LoginFilter(
     private val authenticationManager: AuthenticationManager,
@@ -41,7 +42,6 @@ class LoginFilter(
                                           authentication: Authentication) {
 
         log.info { "Login Success" }
-
         val userDetails: CustomUserDetails = authentication.principal as CustomUserDetails
 
         val username = userDetails.username

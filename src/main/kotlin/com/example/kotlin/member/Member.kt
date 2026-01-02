@@ -1,7 +1,7 @@
 package com.example.kotlin.member
 
 import com.example.kotlin.BaseTime
-import com.example.kotlin.reserveInfo.ReserveInfo
+import com.example.kotlin.reserve.Reserve
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -35,7 +35,7 @@ class Member(
     var last_reward_date: LocalDate? = null,
 
     @OneToMany(mappedBy = "member", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val reserveList: List<ReserveInfo>? = null
+    val reserveList: List<Reserve>? = null
 
 ): BaseTime() {
 
