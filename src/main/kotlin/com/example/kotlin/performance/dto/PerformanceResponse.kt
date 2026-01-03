@@ -1,6 +1,7 @@
 package com.example.kotlin.performance.dto
 
-import com.example.kotlin.performance.ScreenInfoListResponse
+import com.example.kotlin.performance.Performance
+import com.example.kotlin.performanceSchedule.dto.PerformanceScheduleListResponse
 
 
 data class PerformanceResponse(
@@ -14,5 +15,24 @@ data class PerformanceResponse(
 
     val price: Long,
 
-    val screenInfoList: List<ScreenInfoListResponse>? = null
-)
+    val performanceScheduleList: List<PerformanceScheduleListResponse>? = null
+) {
+    companion object {
+        fun from(performance: Performance): PerformanceResponse {
+            return PerformanceResponse(
+                id = performance.id,
+                type = performance.type,
+                title = performance.title,
+                duration = performance.duration,
+                price = performance.price,
+                performanceScheduleList = performance.performanceScheduleList.map { ps ->
+                    PerformanceScheduleListResponse(
+                        venueId = ps.venue.id,
+                        performanceId = ps.performance.id,
+                        startTime = ps.startTime
+                    )
+                }
+            )
+        }
+    }
+}

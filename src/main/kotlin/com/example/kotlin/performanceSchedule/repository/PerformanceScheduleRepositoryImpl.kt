@@ -10,7 +10,8 @@ class PerformanceScheduleRepositoryImpl(
     private val queryFactory: JPAQueryFactory
 ): PerformanceScheduleRepositoryCustom {
 
-    override fun findScreenInfoByVenueIdAndPerformanceId(venueId: Long?, performanceId: Long?): PerformanceScheduleResponse? {
+    override
+    fun findPerformanceScheduleByVenueIdAndPerformanceId(venueId: Long?, performanceId: Long?): PerformanceScheduleResponse? {
         val screenInfo = QScreenInfo.screenInfo
 
         return queryFactory
@@ -28,7 +29,8 @@ class PerformanceScheduleRepositoryImpl(
             .fetchOne()
     }
 
-    override fun findScreenInfoListByVenueIdAndPerformanceId(
+    override
+    fun findPerformanceScheduleListByVenueIdAndPerformanceId(
         venueId: Long?, performanceId: Long?
     ): List<PerformanceSchedule>? {
         val screenInfo = QScreenInfo.screenInfo

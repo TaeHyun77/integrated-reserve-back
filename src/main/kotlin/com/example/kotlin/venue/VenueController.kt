@@ -1,7 +1,7 @@
 package com.example.kotlin.venue
 
-import com.example.kotlin.venue.dto.VenueReqDto
-import com.example.kotlin.venue.dto.VenueResDto
+import com.example.kotlin.venue.dto.VenueRequest
+import com.example.kotlin.venue.dto.VenueResponse
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -16,18 +16,13 @@ class VenueController(
     private val venueService: VenueService
 ) {
 
-    @PostMapping("/register")
-    fun registerVenue(@RequestBody venueReqDto: VenueReqDto): Venue {
-        return venueService.registerVenue(venueReqDto)
+    @PostMapping("/create")
+    fun registerVenue(@RequestBody venueRequest: VenueRequest) {
+        return venueService.createVenue(venueRequest)
     }
 
     @GetMapping("/list")
-    fun venueList(): List<VenueResDto> {
-        return venueService.venueList()
-    }
-
-    @DeleteMapping("/delete/{venueId}")
-    fun deleteVenue(@PathVariable("venueId") venueId: Long) {
-        venueService.deleteVenue(venueId)
+    fun getVenueList(): List<VenueResponse> {
+        return venueService.getVenueList()
     }
 }

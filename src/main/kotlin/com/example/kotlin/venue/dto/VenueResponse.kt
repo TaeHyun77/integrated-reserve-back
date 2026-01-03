@@ -1,6 +1,6 @@
 package com.example.kotlin.venue.dto
 
-data class VenueResDto(
+data class VenueResponse(
     val id: Long?,
 
     val name: String,

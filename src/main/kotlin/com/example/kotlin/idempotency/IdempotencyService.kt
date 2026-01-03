@@ -17,8 +17,8 @@ class IdempotencyService(
     fun execute(
         idempotencyKey: String,
         httpMethod: String,
-        task: () -> ReserveResponse
-    ): ResponseEntity<Any> {
+        task: () -> Any
+    ): ResponseEntity<String> {
 
         // 기존 이력 확인
         val savedIdempotency = idempotencyRepository.findByIdempotencyKey(idempotencyKey)
@@ -29,7 +29,7 @@ class IdempotencyService(
 
                 return ResponseEntity
                     .status(savedIdempotency.statusCode)
-                    .body(objectMapper.readTree(savedIdempotency.responseBody)) // JSON 객체로 파싱하여 반환
+                    .body(savedIdempotency.responseBody) // JSON 객체로 파싱하여 반환
             }
         }
 
@@ -42,7 +42,7 @@ class IdempotencyService(
             saveIdempotency(idempotencyKey, httpMethod, successJson, 200)
             log.info { "멱등성 키 저장 (성공) - 키: $idempotencyKey" }
 
-            ResponseEntity.ok(response)
+            ResponseEntity.ok(successJson)
 
         } catch (e: Exception) {
             handleException(idempotencyKey, httpMethod, e)
@@ -50,19 +50,21 @@ class IdempotencyService(
     }
 
     private fun handleException(
-        key: String,
-        method: String,
+        idempotencyKey: String,
+        httpMethod: String,
         e: Exception
-    ): ResponseEntity<Any> {
+    ): ResponseEntity<String> {
         val (status, errorCode) = when (e) {
             is ReserveException -> e.status.value() to e.errorCode.name
             else -> 500 to "INTERNAL_SERVER_ERROR"
         }
 
-        saveIdempotency(key, method, errorCode, status)
-        log.error(e) { "멱등성 키 저장 (실패) - 키: $key, 에러: $errorCode" }
+        saveIdempotency(idempotencyKey, httpMethod, errorCode, status)
+        log.error(e) { "멱등성 키 저장 (실패) - 키: $idempotencyKey, 에러: $errorCode" }
 
-        return ResponseEntity.status(status).body(errorCode)
+        return ResponseEntity
+            .status(status)
+            .body(errorCode)
     }
 
     private fun saveIdempotency(key: String, method: String, body: String, status: Int) {

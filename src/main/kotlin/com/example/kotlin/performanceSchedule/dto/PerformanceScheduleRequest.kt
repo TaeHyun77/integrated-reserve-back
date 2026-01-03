@@ -17,7 +17,7 @@ data class PerformanceScheduleRequest(
 
     val endTime: LocalDateTime
 ) {
-    fun toScreen(venue: Venue, performance: Performance): PerformanceSchedule {
+    fun toEntity(venue: Venue, performance: Performance): PerformanceSchedule {
         return PerformanceSchedule(
             venue = venue,
             performance = performance,

@@ -11,7 +11,7 @@ data class PerformanceRequest(
 
     val price: Long
 ) {
-    fun toPerformance(): Performance {
+    fun toEntity(): Performance {
         return Performance(
             type = this.type,
             title = this.title,

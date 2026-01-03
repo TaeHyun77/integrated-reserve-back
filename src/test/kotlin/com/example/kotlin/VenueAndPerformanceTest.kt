@@ -9,7 +9,7 @@ import com.example.kotlin.performanceSchedule.PerformanceSchedule
 import com.example.kotlin.performanceSchedule.repository.PerformanceScheduleRepository
 import com.example.kotlin.venue.Venue
 import com.example.kotlin.venue.VenueRepository
-import com.example.kotlin.venue.dto.VenueReqDto
+import com.example.kotlin.venue.dto.VenueRequest
 import com.example.kotlin.venue.VenueService
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.assertThrows
@@ -41,7 +41,7 @@ class VenueAndPerformanceTest {
     fun `venue 등록 테스트`() {
 
         // given
-        val venueTestRequest = VenueReqDto(
+        val venueTestRequest = VenueRequest(
             name = "test_name",
             location = "test_location"
         )

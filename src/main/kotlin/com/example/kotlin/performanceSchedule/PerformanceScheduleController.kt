@@ -16,18 +16,17 @@ class PerformanceScheduleController(
 ) {
 
     @PostMapping("/register")
-    fun registerScreen(
+    fun createPerformanceSchedule(
         @RequestBody performanceScheduleRequest: PerformanceScheduleRequest
     ) {
-        performanceScheduleService.registerScreen(performanceScheduleRequest)
+        performanceScheduleService.createPerformanceSchedule(performanceScheduleRequest)
     }
 
     @GetMapping("/list/{venueId}/{performanceId}")
-    fun screenInfoList(
-        @PathVariable("venueId")
-        venueId: Long, @PathVariable("performanceId")
-        performanceId: Long
+    fun getPerformanceScheduleList(
+        @PathVariable("venueId") venueId: Long,
+        @PathVariable("performanceId") performanceId: Long
     ): List<PerformanceScheduleResponse> {
-        return performanceScheduleService.screenList(venueId, performanceId)
+        return performanceScheduleService.getPerformanceScheduleList(venueId, performanceId)
     }
 }

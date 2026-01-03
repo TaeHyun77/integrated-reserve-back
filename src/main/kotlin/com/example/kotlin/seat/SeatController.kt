@@ -1,7 +1,6 @@
 package com.example.kotlin.seat
 
 import com.example.kotlin.config.Loggable
-import com.example.kotlin.seat.dto.SeatRequest
 import com.example.kotlin.seat.dto.SeatResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -20,27 +19,17 @@ class SeatController(
     private val seatService: SeatService
 ): Loggable {
 
-    @PostMapping("/init")
-    fun initSeats(@RequestBody seatRequest: SeatRequest) {
-        seatService.initSeats(seatRequest)
+    @PostMapping("/init/{performanceScheduleId}")
+    fun initSeats(@PathVariable("performanceScheduleId") performanceScheduleId: Long) {
+        seatService.initSeats(performanceScheduleId)
     }
 
-    @GetMapping("/price/{performanceId}")
-    fun seatPrice(@PathVariable("performanceId") performanceId: Long): Long {
-        return seatService.seatPrice(performanceId)
-    }
-
-    @GetMapping("/list/{screenInfoId}")
-    fun seatList(
-        @PathVariable("screenInfoId") screenInfoId: Long
+    @GetMapping("/list/{performanceScheduleId}")
+    fun getSeatList(
+        @PathVariable("performanceScheduleId") performanceScheduleId: Long
     ): List<SeatResponse> {
 
-        return seatService.seatList(screenInfoId)
-    }
-
-    @DeleteMapping("/delete/{seatId}")
-    fun deleteSeat(@PathVariable("seatId") seatId: Long) {
-        seatService.deleteSeat(seatId)
+        return seatService.getSeatList(performanceScheduleId)
     }
 }
 

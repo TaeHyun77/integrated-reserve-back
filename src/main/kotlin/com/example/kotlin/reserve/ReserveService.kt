@@ -14,6 +14,7 @@ import com.example.kotlin.performanceSchedule.PerformanceSchedule
 import com.example.kotlin.performanceSchedule.PerformanceScheduleService
 import com.example.kotlin.performanceSchedule.repository.PerformanceScheduleRepository
 import com.example.kotlin.reserve.dto.Payment
+import com.example.kotlin.reserve.dto.Refund
 import com.example.kotlin.seat.Seat
 import com.example.kotlin.seat.repository.SeatRepository
 import org.springframework.http.HttpStatus
@@ -52,8 +53,8 @@ class ReserveService (
 
         return redisLockUtil.acquireMultiLockAndRun(lockKey)
         { idempotencyService.execute(
-            idempotencyKey = idempotencyKey,
-            method = "POST",
+            idempotencyKey,
+            "POST",
         ) { doReserveSeats(reserveRequest, member) }
         }
     }
@@ -107,7 +108,7 @@ class ReserveService (
         val seat = seatRepository.findByScreenInfoAndSeatNumber(performanceScheduleId, seatNumber)
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_SEAT_INFO)
 
-        if (seat.is_reserved == true) {
+        if (seat.isReserved == true) {
             log.info {"좌석 중복 예약 시도 - 사용자: ${member.username}, 좌석: $seatNumber"}
 
             throw ReserveException(HttpStatus.CONFLICT, ErrorCode.SEAT_ALREADY_RESERVED)
@@ -123,7 +124,7 @@ class ReserveService (
         seats.forEach { seat ->
 
             // dirty checking
-            seat.is_reserved = true
+            seat.isReserved = true
             seat.reserve = reserve
         }
     }
@@ -153,7 +154,10 @@ class ReserveService (
     /*
     * 예약 취소 로직
     * */
-    fun deleteReserveInfo(reserveNumber: String, idempotencyKey: String): ResponseEntity<String> {
+    fun deleteReserveInfo(
+        reserveNumber: String,
+        idempotencyKey: String
+    ): ResponseEntity<String> {
 
         val reserveInfo = reserveRepository.findByReservationNumber(reserveNumber)
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_RESERVE_INFO)
@@ -163,9 +167,8 @@ class ReserveService (
 
         return redisLockUtil.acquireLockAndRun("${member.username}:${reserveNumber}:doDelete") {
             idempotencyService.execute(
-                key = idempotencyKey,
-                url = "/reserve/delete",
-                method = "DELETE"
+                idempotencyKey,
+                "DELETE"
             ) {
                 doDeleteReserveInfo(reserveNumber, reserveInfo, member)
             }
@@ -176,17 +179,19 @@ class ReserveService (
     * 좌석 예약 취소 로직
     * */
     @Transactional
-    fun doDeleteReserveInfo(reserveNumber: String, reserve: Reserve, member: Member): String {
-
-        return try {
+    fun doDeleteReserveInfo(
+        reserveNumber: String,
+        reserve: Reserve,
+        member: Member
+    ): Refund {
+        try {
             // 사용자의 금액, 리워드 환불
-            member.credit += reserve.finalPrice
-            member.reward += reserve.rewardDiscount
+            member.credit += reserve.finalAmount
+            member.reward += reserve.rewardDiscountAmount
             memberRepository.save(member)
 
             // 좌석 상태 초기화
-            reserve.seats.forEach { seatNumber ->
-
+            reserve.reservedSeat.forEach { seatNumber ->
                 val seat = seatRepository.findByScreenInfoAndSeatNumber(reserve.screenInfoId, seatNumber)
                     ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_SEAT_INFO)
 
@@ -198,10 +203,9 @@ class ReserveService (
             // 예약 정보 삭제
             reserveRepository.delete(reserve)
 
-            log.info{"예약 취소 완료 - 예약번호: $reserveNumber, 사용자: ${member.username}, 환불 금액: ${reserve.finalPrice}, 리워드 환불: ${reserve.rewardDiscount}"}
-            "이미 처리된 요청이거나, 예약이 취소되었습니다."
+            log.info{"예약 취소 완료 - 예약번호: $reserveNumber, 사용자: ${member.username}, 환불 금액: ${reserve.finalAmount}, 리워드 환불: ${reserve.rewardDiscountAmount}"}
+            return Refund(member.username, reserve.finalAmount, reserve.rewardDiscountAmount)
         } catch (e: ReserveException) {
-
             log.info { "예약 취소 실패 - 사용자: ${member.username}, 원인: ${e.errorCode}" }
             throw e
         }

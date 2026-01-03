@@ -24,8 +24,7 @@ enum class ErrorCode (
 
     NOT_EXIST_IN_HEADER_IDEMPOTENCY_KEY("NOT_EXIST_IN_HEADER_IDEMPOTENCY_KEY", "Idempotency-Key 헤더 누락"),
 
-    NOT_EXIST_IDEMPOTENCY_KEY_INFO("NOT_EXIST_IDEMPOTENCY_KEY_INFO", "Idempotency-Key 정보를 찾을 수 없습니다."),
-
+    NOT_EXIST_REFRESH_TOKEN("NOT_EXIST_REFRESH_TOKEN", "refresh token이 존재하지 않습니다."),
 
     // TOKEN
     ACCESSTOKEN_ISEXPIRED("ACCESSTOKEN_ISEXPIRED", "JWT 토큰 만료"),
@@ -34,6 +33,7 @@ enum class ErrorCode (
 
     IS_NOT_ACCESSTOKEN("IS_NOT_ACCESSTOKEN", "JWT 토큰이 아닙니다."),
 
+    EXPIRED_TOKEN("EXPIRED_TOKEN", "만료된 토큰입니다."),
 
     // RESERVE
     SEAT_ALREADY_RESERVED("SEAT_ALREADY_RESERVED", "이미 예약된 좌석입니다."),

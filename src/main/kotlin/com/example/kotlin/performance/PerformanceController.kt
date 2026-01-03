@@ -18,19 +18,13 @@ class PerformanceController(
 ): Loggable {
 
     @PostMapping("/register")
-    fun registerPerformance(@RequestBody performanceRequest: PerformanceRequest): Performance {
-        return performanceService.registerPerformance(performanceRequest)
-    }
-
-    @DeleteMapping("/delete/{performanceId}")
-    fun deletePerformance(@PathVariable("performanceId") performanceId: Long) {
-        performanceService.deletePerformance(performanceId)
-
+    fun createPerformance(@RequestBody performanceRequest: PerformanceRequest) {
+        return performanceService.createPerformance(performanceRequest)
     }
 
     @GetMapping("/list/{id}")
-    fun performanceList(@PathVariable("id") venueId: Long): List<PerformanceResponse> {
+    fun getPerformanceList(@PathVariable("id") venueId: Long): List<PerformanceResponse> {
 
-        return performanceService.performanceList(venueId)
+        return performanceService.getPerformanceList(venueId)
     }
 }

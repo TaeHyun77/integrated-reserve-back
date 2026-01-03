@@ -31,3 +31,11 @@ fun parsingToken(request: HttpServletRequest): String {
 
     return token
 }
+
+fun String.removeSpacesAndHyphens(): String {
+    if (this.contains(' ') || this.contains('-')) {
+        return this.replace("[\\s-]".toRegex(), "")
+    }
+
+    return this
+}

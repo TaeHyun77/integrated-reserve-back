@@ -17,7 +17,7 @@ data class MemberResponse(
 
     val email: String,
 
-    var last_reward_date: LocalDate?,
+    var lastRewardDate: LocalDate?,
 
     val credit: Long,
 
@@ -33,13 +33,13 @@ data class MemberResponse(
                 name = member.name,
                 role = member.role,
                 email = member.email,
-                last_reward_date = member.last_reward_date,
+                lastRewardDate = member.lastRewardDate,
                 reward = member.reward,
                 credit = member.credit,
                 reserveList = member.reserveList?.map {
                     ReserveResponse(
                         reservationNumber = it.reservationNumber,
-                        reservedBy = username,
+                        reservedBy = member.username,
                         totalAmount = it.totalAmount,
                         rewardDiscountAmount = it.rewardDiscountAmount,
                         finalAmount = it.finalAmount,

@@ -5,8 +5,8 @@ import com.example.kotlin.performanceSchedule.dto.PerformanceScheduleResponse
 
 interface PerformanceScheduleRepositoryCustom {
 
-    fun findScreenInfoByVenueIdAndPerformanceId(venueId: Long?, performanceId: Long?): PerformanceScheduleResponse?
+    fun findPerformanceScheduleByVenueIdAndPerformanceId(venueId: Long?, performanceId: Long?): PerformanceScheduleResponse?
 
-    fun findScreenInfoListByVenueIdAndPerformanceId(venueId: Long?, performanceId: Long?): List<PerformanceSchedule>?
+    fun findPerformanceScheduleListByVenueIdAndPerformanceId(venueId: Long?, performanceId: Long?): List<PerformanceSchedule>?
 
 }

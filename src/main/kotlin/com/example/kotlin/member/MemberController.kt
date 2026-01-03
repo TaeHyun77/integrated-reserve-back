@@ -3,18 +3,14 @@ package com.example.kotlin.member
 import com.example.kotlin.config.Loggable
 import com.example.kotlin.member.dto.MemberRequest
 import com.example.kotlin.member.dto.MemberResponse
-import com.example.kotlin.util.parsingToken
+import com.example.kotlin.member.dto.UsernameAvailabilityResponse
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
+import com.example.kotlin.util.parsingToken
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
 
 @RequestMapping("/api/member")
@@ -34,21 +30,24 @@ class MemberController(
 
     // 사용자 회원가입
     @PostMapping("/save")
-    fun saveMember(@RequestBody memberRequest: MemberRequest): Member {
+    fun saveMember(@RequestBody memberRequest: MemberRequest) {
         return memberService.saveMember(memberRequest)
     }
 
     // 아이디 검증 로직
     @GetMapping("/check/validation/{username}")
-    fun checkUsername(@PathVariable("username") username: CheckUsername): ResponseEntity<UsernameCheckResponse> {
+    fun checkUsername(@PathVariable("username") username: CheckUsername): ResponseEntity<UsernameAvailabilityResponse> {
         return memberService.checkUsername(username)
     }
 
     // 하루 한 번 리워드 지급 로직
-    @PostMapping("/reward/{today}")
-    fun earnRewardToday(request: HttpServletRequest, @PathVariable("today") today: LocalDate): ResponseEntity<String> {
+    @PostMapping("/reward")
+    fun earnRewardToday(
+        request: HttpServletRequest,
+    ): ResponseEntity<String> {
 
         val token: String = parsingToken(request)
+        val today = LocalDate.now()
 
         val idempotencyKey: String = request.getHeader("Idempotency-key")
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_IN_HEADER_IDEMPOTENCY_KEY)

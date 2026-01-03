@@ -22,7 +22,7 @@ class PerformanceScheduleService(
 ) {
 
     @Transactional
-    fun registerScreen(performanceScheduleRequest: PerformanceScheduleRequest) {
+    fun createPerformanceSchedule(performanceScheduleRequest: PerformanceScheduleRequest) {
 
         val venue: Venue = venueRepository.findById(performanceScheduleRequest.venueId)
             .orElseThrow { throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_PLACE_INFO) }
@@ -30,35 +30,17 @@ class PerformanceScheduleService(
         val performance: Performance = performanceRepository.findById(performanceScheduleRequest.performanceId)
             .orElseThrow { throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_PERFORMANCE_INFO) }
 
-        try {
-            performanceScheduleRepository.save(performanceScheduleRequest.toScreen(venue, performance))
-        } catch (e: ReserveException) {
-            throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.FAIL_TO_SAVE_DATA)
-        }
+        performanceScheduleRepository.save(performanceScheduleRequest.toEntity(venue, performance))
     }
 
-    fun screenList(venueId: Long, performanceId: Long): List<PerformanceScheduleResponse> {
+    fun getPerformanceScheduleList(
+        venueId: Long,
+        performanceId: Long
+    ): List<PerformanceScheduleResponse> {
+        val performanceScheduleList = performanceScheduleRepository.findPerformanceScheduleListByVenueIdAndPerformanceId(venueId, performanceId)
+            ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_PERFORMANCE_SCHEDULE)
 
-        val screenInfos = performanceScheduleRepository.findScreenInfoListByVenueIdAndPerformanceId(venueId, performanceId)
-            ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_SCREEN_INFO)
-
-        return screenInfos.map {
-            val performance = PerformanceResponse(
-                id = it.performance.id,
-                type = it.performance.type,
-                title = it.performance.title,
-                duration = it.performance.duration,
-                price = it.performance.price
-            )
-
-            PerformanceScheduleResponse(
-                id = it.id,
-                performance = performance,
-                screeningDate = it.screeningDate,
-                startTime = it.startTime,
-                endTime = it.endTime
-            )
-        }
+        return performanceScheduleList.map(PerformanceScheduleResponse::from)
     }
 
     fun getPerformanceSchedule(performanceScheduleId: Long): PerformanceSchedule {

@@ -2,13 +2,7 @@ package com.example.kotlin.member
 
 import com.example.kotlin.BaseTime
 import com.example.kotlin.reserve.Reserve
-import jakarta.persistence.CascadeType
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.OneToMany
+import jakarta.persistence.*
 import java.time.LocalDate
 
 @Entity
@@ -32,7 +26,7 @@ class Member(
 
     var reward: Long,
 
-    var last_reward_date: LocalDate? = null,
+    var lastRewardDate: LocalDate? = null,
 
     @OneToMany(mappedBy = "member", cascade = [CascadeType.ALL], orphanRemoval = true)
     val reserveList: List<Reserve>? = null

@@ -2,6 +2,8 @@ package com.example.kotlin.refresh
 
 import com.example.kotlin.util.createCookie
 import com.example.kotlin.jwt.JwtUtil
+import com.example.kotlin.reserveException.ErrorCode
+import com.example.kotlin.reserveException.ReserveException
 import io.jsonwebtoken.ExpiredJwtException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -18,33 +20,26 @@ class ReissueService(
 
     @Transactional
     fun reToken(request: HttpServletRequest, response: HttpServletResponse): ResponseEntity<Any> {
-        val cookies = request.cookies
-        val refresh = cookies?.firstOrNull { it.name == "refresh" }?.value
+        val refreshToken = extractRefreshToken(request)
 
-        if (refresh == null) {
-            return ResponseEntity("refresh token null", HttpStatus.BAD_REQUEST)
+        if (jwtUtil.isExpired(refreshToken)) {
+            throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.EXPIRED_TOKEN)
         }
 
-        try {
-            jwtUtil.isExpired(refresh)
-        } catch (e: ExpiredJwtException) {
-            return ResponseEntity("access token expired", HttpStatus.BAD_REQUEST)
-        }
-
-        val category = jwtUtil.getCategory(refresh)
+        val category = jwtUtil.getCategory(refreshToken)
         if (category != "refresh") {
-            return ResponseEntity("invalid refresh token", HttpStatus.BAD_REQUEST)
+            throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_TOKEN)
         }
 
-        val isExist = refreshRepository.existsByRefresh(refresh)
+        val isExist = refreshRepository.existsByRefresh(refreshToken)
         if (!isExist) {
-            return ResponseEntity("invalid refresh token", HttpStatus.BAD_REQUEST)
+            throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_REFRESH_TOKEN)
         }
 
-        val username = jwtUtil.getUsername(refresh)
-        val role = jwtUtil.getRole(refresh)
-        val name = jwtUtil.getName(refresh)
-        val email = jwtUtil.getEmail(refresh)
+        val username = jwtUtil.getUsername(refreshToken)
+        val role = jwtUtil.getRole(refreshToken)
+        val name = jwtUtil.getName(refreshToken)
+        val email = jwtUtil.getEmail(refreshToken)
 
         val newAccess = jwtUtil.createToken(
             username = username,
@@ -64,14 +59,21 @@ class ReissueService(
             expired = 86_400_000L,
         )
 
-        refreshRepository.deleteByRefresh(refresh)
+        refreshRepository.deleteByRefresh(refreshToken)
         createRefresh(username, newRefresh, 86_400_000L)
 
         response.setHeader("access", newAccess)
         response.addCookie(createCookie("refresh", newRefresh))
 
-        return ResponseEntity.ok().build()
+        return ResponseEntity.ok()
+            .build()
     }
+
+    private fun extractRefreshToken(request: HttpServletRequest): String =
+        request.cookies
+            ?.firstOrNull { it.name == "refresh" }
+            ?.value
+            ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_REFRESH_TOKEN)
 
     @Transactional
     fun createRefresh(username: String, refresh: String, expired: Long) {
