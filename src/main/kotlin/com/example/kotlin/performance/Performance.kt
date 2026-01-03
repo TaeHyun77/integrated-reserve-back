@@ -1,6 +1,6 @@
 package com.example.kotlin.performance
 
-import com.example.kotlin.screenInfo.ScreenInfo
+import com.example.kotlin.performanceSchedule.PerformanceSchedule
 import jakarta.persistence.*
 
 @Entity
@@ -20,5 +20,5 @@ class Performance(
     var price: Long,
 
     @OneToMany(mappedBy = "performance", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val screenInfoList: List<ScreenInfo> = ArrayList()
+    val performanceScheduleList: List<PerformanceSchedule> = ArrayList()
 )

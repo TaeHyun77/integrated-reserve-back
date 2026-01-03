@@ -1,7 +1,9 @@
 package com.example.kotlin.idempotency
 
 import com.example.kotlin.config.Loggable
+import com.example.kotlin.reserve.dto.ReserveResponse
 import com.example.kotlin.reserveException.ReserveException
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -9,75 +11,71 @@ import java.time.LocalDateTime
 @Component
 class IdempotencyService(
     private val idempotencyRepository: IdempotencyRepository,
-): Loggable {
+    private val objectMapper: ObjectMapper
+) : Loggable {
 
     fun execute(
-        key: String,
-        url: String,
-        method: String,
-        process: () -> String
+        idempotencyKey: String,
+        httpMethod: String,
+        task: () -> Any
     ): ResponseEntity<String> {
 
-        val now = LocalDateTime.now()
-        val idempotency = idempotencyRepository.findByIdempotencyKey(key)
+        // 기존 이력 확인
+        val savedIdempotency = idempotencyRepository.findByIdempotencyKey(idempotencyKey)
 
-        // 유효 기간이 지나지 않은 동일 요청이 있는 경우 저장된 응답 반환
-        if (idempotency != null && idempotency.expires_at.isAfter(now)) {
+        if (savedIdempotency != null) {
+            if (savedIdempotency.expiresAt.isAfter(LocalDateTime.now())) {
+                log.info { "동일한 요청 감지 - 키: $idempotencyKey" }
 
-            log.info { "동일한 Idempotent 요청 감지됨 - 저장된 이전 응답 반환" }
-            log.info { "⇒ ${idempotency.responseBody}" }
-
-            val idempotencyRes = IdempotencyResponse(
-                statusCode = idempotency.statusCode,
-                responseBody = idempotency.responseBody
-            )
-
-            return ResponseEntity
-                .status(idempotencyRes.statusCode)
-                .body(idempotencyRes.responseBody)
+                return ResponseEntity
+                    .status(savedIdempotency.statusCode)
+                    .body(savedIdempotency.responseBody) // JSON 객체로 파싱하여 반환
+            }
         }
 
-        try {
-            val successMessage = process()  // 성공 결과 메시지 or 예외
+        return try {
+            // 로직 실행
+            val response = task()
+            val successJson = objectMapper.writeValueAsString(response)
 
-            idempotencyRepository.save(
-                Idempotency(
-                    idempotencyKey = key,
-                    url = url,
-                    httpMethod = method,
-                    responseBody = successMessage,
-                    statusCode = 200,
-                    expires_at = now.plusMinutes(10)
-                )
-            )
+            // 성공 결과 저장
+            saveIdempotency(idempotencyKey, httpMethod, successJson, 200)
+            log.info { "멱등성 키 저장 (성공) - 키: $idempotencyKey" }
 
-            log.info{"멱등성 키 저장 ( 성공 요청 ) - key: $key, message: $successMessage"}
+            ResponseEntity.ok(successJson)
 
-            return ResponseEntity
-                .status(200)
-                .body(successMessage)
-
-        } catch (e: ReserveException) {
-
-            val errorStatus = e.status.value()
-            val errorCode = e.errorCode.name
-
-            idempotencyRepository.save(
-                Idempotency(
-                    idempotencyKey = key,
-                    url = url,
-                    httpMethod = method,
-                    responseBody = errorCode,
-                    statusCode = errorStatus,
-                    expires_at = now.plusMinutes(10)
-                )
-            )
-
-            log.info{"멱등성 키 저장 (실패 요청) - key: $key, message: $errorCode"}
-
-            return ResponseEntity
-                .status(e.status)
-                .body(errorCode)
+        } catch (e: Exception) {
+            handleException(idempotencyKey, httpMethod, e)
         }
+    }
+
+    private fun handleException(
+        idempotencyKey: String,
+        httpMethod: String,
+        e: Exception
+    ): ResponseEntity<String> {
+        val (status, errorCode) = when (e) {
+            is ReserveException -> e.status.value() to e.errorCode.name
+            else -> 500 to "INTERNAL_SERVER_ERROR"
+        }
+
+        saveIdempotency(idempotencyKey, httpMethod, errorCode, status)
+        log.error(e) { "멱등성 키 저장 (실패) - 키: $idempotencyKey, 에러: $errorCode" }
+
+        return ResponseEntity
+            .status(status)
+            .body(errorCode)
+    }
+
+    private fun saveIdempotency(key: String, method: String, body: String, status: Int) {
+        idempotencyRepository.save(
+            Idempotency(
+                idempotencyKey = key,
+                httpMethod = method,
+                responseBody = body,
+                statusCode = status,
+                expiresAt = LocalDateTime.now().plusMinutes(10)
+            )
+        )
     }
 }

@@ -19,21 +19,17 @@ class Idempotency(
     @Column(unique = true)
     val idempotencyKey: String,
 
-    // 요청 url
-    @Column(nullable = false)
-    val url: String,
-
     // HTTP 요청 메서드
     @Column(nullable = false)
     val httpMethod: String,
 
+    @Column(nullable = false)
     val statusCode: Int,
 
-    // 응답 값
-    @Column(columnDefinition = "TEXT")
-    val responseBody: String? = null,
+    // 응답 값, JSON
+    @Column(nullable = false)
+    val responseBody: String,
 
-    // 멱등키 유효 기간 ( 10분으로 설정함 )
-    val expires_at: LocalDateTime
-
+    // 유효 기간 ( 10분으로 설정 )
+    val expiresAt: LocalDateTime
 ): BaseTime()

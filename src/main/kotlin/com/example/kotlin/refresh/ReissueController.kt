@@ -12,7 +12,10 @@ class ReissueController(
 ) {
 
     @PostMapping("/api/reToken")
-    fun reToken(request: HttpServletRequest, response: HttpServletResponse): ResponseEntity<Any> {
+    fun reToken(
+        request: HttpServletRequest,
+        response: HttpServletResponse
+    ): ResponseEntity<Any> {
         return reissueService.reToken(request, response)
     }
 }

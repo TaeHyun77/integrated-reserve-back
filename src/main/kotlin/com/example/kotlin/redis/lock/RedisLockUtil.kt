@@ -14,12 +14,15 @@ class RedisLockUtil(
     /**
      * 단일 키용 락
      */
-    fun <T> acquireLockAndRun(key: String, block: () -> T): T {
+    fun <T> acquireLockAndRun(
+        key: String,
+        task: () -> T
+    ): T {
         val lock = lockManager.tryLock(key)
-            ?: throw ReserveException(HttpStatus.CONFLICT, ErrorCode.REDIS_FAILED_TO_ACQUIRED_LOCK)
+            ?: throw ReserveException(HttpStatus.CONFLICT, ErrorCode.FAILED_TO_ACQUIRED_LOCK)
 
         return try {
-            block()
+            task()
         } finally {
             lockManager.unlock(lock)
         }
@@ -27,18 +30,23 @@ class RedisLockUtil(
 
     /**
      * 여러 키에 대한 멀티락
+     *
+     * 락을 획득하고 로직 실행
      */
-    fun <T> acquireMultiLockAndRun(keys: List<String>, block: () -> T): T {
+    fun <T> acquireMultiLockAndRun(
+        keys: List<String>,
+        task: () -> T
+    ): T {
         if (keys.isEmpty()) {
             log.error { "[RedisLockError] keys are empty" }
-            throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.REDIS_NOT_EXIST_LOCK_KEY)
+            throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_LOCK_KEY)
         }
 
         val lock = lockManager.tryMultiLock(keys)
-            ?: throw ReserveException(HttpStatus.CONFLICT, ErrorCode.REDIS_FAILED_TO_ACQUIRED_LOCK)
+            ?: throw ReserveException(HttpStatus.CONFLICT, ErrorCode.FAILED_TO_ACQUIRED_LOCK)
 
         return try {
-            block()
+            task()
         } finally {
             lockManager.unlock(lock)
         }

@@ -3,14 +3,12 @@ package com.example.kotlin.member
 import com.example.kotlin.config.Loggable
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
+import com.example.kotlin.util.removeSpacesAndHyphens
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import org.springframework.http.HttpStatus
-import kotlin.text.contains
-import kotlin.text.replace
-import kotlin.text.toRegex
 
 
 @JvmInline
@@ -49,14 +47,6 @@ class CheckUsernameDeserializer : JsonDeserializer<CheckUsername>(), Loggable {
 
         return CheckUsername(cleanedUsername)
     }
-}
-
-fun String.removeSpacesAndHyphens(): String {
-    if (this.contains(' ') || this.contains('-')) {
-        return this.replace("[\\s-]".toRegex(), "")
-    }
-
-    return this
 }
 
 /*

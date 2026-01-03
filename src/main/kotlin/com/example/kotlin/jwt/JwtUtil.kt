@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
+import java.time.LocalDateTime
 import java.util.Date
 import javax.crypto.SecretKey
 import javax.crypto.spec.SecretKeySpec
@@ -65,10 +66,10 @@ class JwtUtil(
             .claim("email", email)
             .claim("role", role)
             .claim("category", category)
-            .setExpiration(expiredDate)
-            .setIssuedAt(now)
+            .expiration(expiredDate) // 토큰 만료 시간
+            .issuedAt(now) // 토큰의 발급 시간
+            .subject("AccessToken") // subject: 이 토큰이 어느 의미를 가지는지 구분하기 위한 값
             .signWith(secretKey)
-            .setSubject("AccessToken")
             .compact()
     }
 }
