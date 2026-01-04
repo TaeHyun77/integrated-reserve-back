@@ -29,7 +29,7 @@ class IdempotencyService(
 
                 return ResponseEntity
                     .status(savedIdempotency.statusCode)
-                    .body(savedIdempotency.responseBody) // JSON 객체로 파싱하여 반환
+                    .body(savedIdempotency.responseBody)
             }
         }
 

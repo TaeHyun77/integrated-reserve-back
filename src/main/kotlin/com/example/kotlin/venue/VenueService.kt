@@ -17,12 +17,7 @@ class VenueService(
     }
 
     fun getVenueList(): List<VenueResponse> {
-        return venueRepository.findAll().map {
-            VenueResponse(
-                id = it.id,
-                name = it.name,
-                location = it.location
-            )
-        }
+        return venueRepository.findAll()
+            .map(VenueResponse::from)
     }
 }

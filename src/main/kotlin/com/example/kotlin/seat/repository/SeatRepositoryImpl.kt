@@ -8,23 +8,22 @@ class SeatRepositoryImpl(
     private val queryFactory: JPAQueryFactory
 ): SeatRepositoryCustom {
 
-
-    override fun findSeatByScreenInfoId(screenInfoId: Long): List<Seat> {
+    override fun findSeatByScreenInfoId(performanceScheduleId: Long): List<Seat> {
         val seat = QSeat.seat
 
         return queryFactory
             .selectFrom(seat)
-            .where(seat.screenInfo.id.eq(screenInfoId))
+            .where(seat.performanceSchedule.id.eq(performanceScheduleId))
             .fetch()
     }
 
-    override fun findByScreenInfoAndSeatNumber(screenInfoId: Long?, seatNumber: String): Seat? {
+    override fun findByScreenInfoAndSeatNumber(performanceScheduleId: Long?, seatNumber: String): Seat? {
         val seat = QSeat.seat
 
         return queryFactory
             .selectFrom(seat)
             .where(
-                seat.screenInfo.id.eq(screenInfoId),
+                seat.performanceSchedule.id.eq(performanceScheduleId),
                 seat.seatNumber.eq(seatNumber)
             )
             .fetchOne()

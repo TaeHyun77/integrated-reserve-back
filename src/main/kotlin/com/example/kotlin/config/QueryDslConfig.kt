@@ -10,7 +10,6 @@ class QueryDslConfig(
     val em: EntityManager
 ) {
     @Bean
-    fun queryFactory(): JPAQueryFactory {
-        return JPAQueryFactory(em)
-    }
+    fun queryFactory(): JPAQueryFactory =
+        JPAQueryFactory(em)
 }

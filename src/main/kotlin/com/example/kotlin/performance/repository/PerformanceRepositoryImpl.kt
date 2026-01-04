@@ -1,7 +1,7 @@
 package com.example.kotlin.performance.repository
 
 import com.example.kotlin.performance.Performance
-import com.example.kotlin.screenInfo.QScreenInfo
+import com.example.kotlin.performanceSchedule.QPerformanceSchedule
 import com.querydsl.jpa.impl.JPAQueryFactory
 
 class PerformanceRepositoryImpl(
@@ -10,12 +10,12 @@ class PerformanceRepositoryImpl(
 
     // 특정 영화관의 영화 목록 리스트 반환
     override fun findPerformancesByVenueId(venueId: Long): List<Performance> {
-        val screenInfo = QScreenInfo.screenInfo
+        val performanceSchedule = QPerformanceSchedule.performanceSchedule
 
         return queryFactory
-            .select(screenInfo.performance)
-            .from(screenInfo)
-            .where(screenInfo.venue.id.eq(venueId))
+            .select(performanceSchedule.performance)
+            .from(performanceSchedule)
+            .where(performanceSchedule.venue.id.eq(venueId))
             .fetch()
     }
 }
