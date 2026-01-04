@@ -2,6 +2,8 @@ package com.example.kotlin.reserve
 
 import com.example.kotlin.BaseTime
 import com.example.kotlin.member.Member
+import com.example.kotlin.seat.Seat
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -10,6 +12,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
 import java.time.LocalDateTime
 
 @Entity
@@ -31,9 +34,18 @@ class Reserve(
 
     val reservedSeat: List<String>,
 
-    val screenInfoId: Long?,
+    val performanceScheduleId: Long?,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     val member: Member,
-): BaseTime()
+
+    @OneToMany(mappedBy = "reserve", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val seatList: MutableList<Seat> = ArrayList()
+): BaseTime() {
+    fun addSeat(seat: Seat) {
+        seat.reserve = this
+        seat.isReserved = true
+        seatList.add(seat)
+    }
+}

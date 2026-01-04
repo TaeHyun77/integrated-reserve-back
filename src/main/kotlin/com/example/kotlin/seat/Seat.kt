@@ -26,8 +26,12 @@ class Seat(
     @JoinColumn(name = "reserve_id")
     var reserve: Reserve? = null,
 
-    // 좌석은 A1 ~ A5 , B1 ~ B5 까지만 있다고 가정
     val seatNumber: String?,
 
-    var isReserved: Boolean?
-)
+    var isReserved: Boolean
+) {
+    fun updateStatus(isReserved: Boolean, reserve: Reserve?) {
+        this.isReserved = isReserved
+        this.reserve = reserve
+    }
+}

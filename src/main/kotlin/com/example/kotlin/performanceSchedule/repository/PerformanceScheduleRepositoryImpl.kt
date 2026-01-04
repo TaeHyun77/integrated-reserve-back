@@ -1,6 +1,6 @@
 package com.example.kotlin.performanceSchedule.repository
 
-import com.example.kotlin.screenInfo.QScreenInfo
+import com.example.kotlin.performanceSchedule.QPerformanceSchedule
 import com.example.kotlin.performanceSchedule.PerformanceSchedule
 import com.example.kotlin.performanceSchedule.dto.PerformanceScheduleResponse
 import com.querydsl.core.types.Projections
@@ -12,19 +12,19 @@ class PerformanceScheduleRepositoryImpl(
 
     override
     fun findPerformanceScheduleByVenueIdAndPerformanceId(venueId: Long?, performanceId: Long?): PerformanceScheduleResponse? {
-        val screenInfo = QScreenInfo.screenInfo
+        val performanceSchedule = QPerformanceSchedule.performanceSchedule
 
         return queryFactory
             .select(
                 Projections.constructor(
                 PerformanceScheduleResponse::class.java,
-                screenInfo.id,
-                screenInfo.performance
+                    performanceSchedule.id,
+                    performanceSchedule.performance
             ))
-            .from(screenInfo)
+            .from(performanceSchedule)
             .where(
-                screenInfo.venue.id.eq(venueId),
-                screenInfo.performance.id.eq(performanceId)
+                performanceSchedule.venue.id.eq(venueId),
+                performanceSchedule.performance.id.eq(performanceId)
             )
             .fetchOne()
     }
@@ -33,7 +33,7 @@ class PerformanceScheduleRepositoryImpl(
     fun findPerformanceScheduleListByVenueIdAndPerformanceId(
         venueId: Long?, performanceId: Long?
     ): List<PerformanceSchedule>? {
-        val screenInfo = QScreenInfo.screenInfo
+        val screenInfo = QPerformanceSchedule.performanceSchedule
 
         return queryFactory
             .select(screenInfo)

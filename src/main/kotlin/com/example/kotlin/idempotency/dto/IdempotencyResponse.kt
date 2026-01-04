@@ -1,6 +1,6 @@
 package com.example.kotlin.idempotency.dto
 
-data class IdempotencyResDto (
+data class IdempotencyResponse (
     val statusCode: Int,
 
     val responseBody: String

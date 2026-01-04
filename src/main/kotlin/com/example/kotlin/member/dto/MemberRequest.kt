@@ -5,7 +5,7 @@ import com.example.kotlin.member.Member
 import com.example.kotlin.member.Role
 
 data class MemberRequest (
-    val username: CheckUsername,
+    val username: String,
 
     val password: String,
 
@@ -19,7 +19,7 @@ data class MemberRequest (
 ) {
     fun toEntity(password: String): Member {
         return Member(
-            username = this.username.username,
+            username = this.username,
             password = password,
             name = this.name,
             role = this.role,

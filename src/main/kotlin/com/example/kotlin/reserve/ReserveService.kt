@@ -38,6 +38,7 @@ class ReserveService (
     /*
     * 예약 로직 ( + 멱등성 )
     * */
+    @Transactional
     fun reserveSeat(
         reserveRequest: ReserveRequest,
         idempotencyKey: String
@@ -59,7 +60,6 @@ class ReserveService (
         }
     }
 
-    @Transactional
     fun doReserveSeats(
         reserveRequest: ReserveRequest,
         member: Member
@@ -74,15 +74,13 @@ class ReserveService (
             // 예약 금액 유효성 체크
             val payment = calculatePayableAmount(performanceSchedule, reserveRequest, member)
 
-            // 예약 정보
-            val reservation = createReservation(reserveRequest, member, performanceSchedule, payment)
-
-            // 좌석 예약
-            reserveSeats(seats, reservation)
+            // 예약 정보 및 좌석 세팅
+            val reserve = createReservation(reserveRequest, member, performanceSchedule, payment)
+            reserveSeats(seats, reserve)
 
             log.info {"예약 성공 - 사용자: ${member.username}, 좌석 수: ${reserveRequest.reservedSeat.size}, 총 가격: ${payment.totalAmount}, 포인트 사용: ${payment.rewardDiscountAmount}, 결제 금액: ${payment.finalAmount}"}
 
-            return ReserveResponse.from(reservation)
+            return ReserveResponse.from(reserve)
         } catch (e: ReserveException) {
             log.info {"예약 실패 - 사용자: ${member.username}, ${e.errorCode}"}
             throw e
@@ -108,7 +106,7 @@ class ReserveService (
         val seat = seatRepository.findByScreenInfoAndSeatNumber(performanceScheduleId, seatNumber)
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_SEAT_INFO)
 
-        if (seat.isReserved == true) {
+        if (seat.isReserved) {
             log.info {"좌석 중복 예약 시도 - 사용자: ${member.username}, 좌석: $seatNumber"}
 
             throw ReserveException(HttpStatus.CONFLICT, ErrorCode.SEAT_ALREADY_RESERVED)
@@ -122,10 +120,7 @@ class ReserveService (
         reserve: Reserve
     ) {
         seats.forEach { seat ->
-
-            // dirty checking
-            seat.isReserved = true
-            seat.reserve = reserve
+            reserve.addSeat(seat)
         }
     }
 
@@ -154,6 +149,7 @@ class ReserveService (
     /*
     * 예약 취소 로직
     * */
+    @Transactional
     fun deleteReserveInfo(
         reserveNumber: String,
         idempotencyKey: String
@@ -170,7 +166,7 @@ class ReserveService (
                 idempotencyKey,
                 "DELETE"
             ) {
-                doDeleteReserveInfo(reserveNumber, reserveInfo, member)
+                doDeleteReserveInfo(reserveInfo, member)
             }
         }
     }
@@ -178,9 +174,7 @@ class ReserveService (
     /*
     * 좌석 예약 취소 로직
     * */
-    @Transactional
     fun doDeleteReserveInfo(
-        reserveNumber: String,
         reserve: Reserve,
         member: Member
     ): Refund {
@@ -191,19 +185,14 @@ class ReserveService (
             memberRepository.save(member)
 
             // 좌석 상태 초기화
-            reserve.reservedSeat.forEach { seatNumber ->
-                val seat = seatRepository.findByScreenInfoAndSeatNumber(reserve.screenInfoId, seatNumber)
-                    ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_SEAT_INFO)
-
-                seat.is_reserved = false
-                seat.reserve = null
-                seatRepository.save(seat)
+            reserve.seatList.forEach { seat ->
+                seat.updateStatus(false, null)
             }
 
             // 예약 정보 삭제
             reserveRepository.delete(reserve)
 
-            log.info{"예약 취소 완료 - 예약번호: $reserveNumber, 사용자: ${member.username}, 환불 금액: ${reserve.finalAmount}, 리워드 환불: ${reserve.rewardDiscountAmount}"}
+            log.info{"예약 취소 완료 - 예약번호: ${reserve.reservationNumber}, 사용자: ${member.username}, 환불 금액: ${reserve.finalAmount}, 리워드 환불: ${reserve.rewardDiscountAmount}"}
             return Refund(member.username, reserve.finalAmount, reserve.rewardDiscountAmount)
         } catch (e: ReserveException) {
             log.info { "예약 취소 실패 - 사용자: ${member.username}, 원인: ${e.errorCode}" }
@@ -217,16 +206,15 @@ class ReserveService (
         performanceSchedule: PerformanceSchedule,
         payment: Payment
     ): Reserve =
-        reserveRepository.save(
-            Reserve(
-                reservationNumber = request.reservationNumber,
-                reservedBy = request.reservedBy,
-                totalAmount = payment.totalAmount,
-                rewardDiscountAmount = payment.rewardDiscountAmount,
-                finalAmount = payment.finalAmount,
-                reservedSeat = request.reservedSeat,
-                screenInfoId = performanceSchedule.id,
-                member = member
-            )
+        Reserve(
+            reservationNumber = request.reservationNumber,
+            reservedBy = request.reservedBy,
+            totalAmount = payment.totalAmount,
+            rewardDiscountAmount = payment.rewardDiscountAmount,
+            finalAmount = payment.finalAmount,
+            reservedSeat = request.reservedSeat,
+            performanceScheduleId = performanceSchedule.id,
+            member = member
         )
+
 }

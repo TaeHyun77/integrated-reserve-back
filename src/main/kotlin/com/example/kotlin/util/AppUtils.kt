@@ -2,12 +2,14 @@ package com.example.kotlin.util
 
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.server.reactive.ServerHttpRequest
 
 const val REDISSON_HOST_PREFIX: String = "redis://"
+private val log = KotlinLogging.logger {}
 
 fun createCookie(key: String, value: String): Cookie {
 
@@ -33,6 +35,7 @@ fun parsingToken(request: HttpServletRequest): String {
 }
 
 fun String.removeSpacesAndHyphens(): String {
+    log.info { "remove spaces or Hyphens" }
     if (this.contains(' ') || this.contains('-')) {
         return this.replace("[\\s-]".toRegex(), "")
     }

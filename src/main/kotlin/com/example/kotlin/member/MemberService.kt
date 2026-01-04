@@ -45,12 +45,14 @@ class MemberService(
         )
     }
 
-    fun checkUsername(username: CheckUsername): ResponseEntity<UsernameAvailabilityResponse> {
+    fun checkUsername(username: String): ResponseEntity<UsernameAvailabilityResponse> {
         val exists = memberRepository.existsByUsername(username)
 
         if (exists) {
             throw ReserveException(HttpStatus.CONFLICT, ErrorCode.DUPLICATED_USERNAME)
         }
+
+        CheckUsername(username)
 
         return ResponseEntity.ok(
             UsernameAvailabilityResponse(true, "사용 가능한 아이디입니다.")
