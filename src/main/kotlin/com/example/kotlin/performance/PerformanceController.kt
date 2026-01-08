@@ -17,13 +17,13 @@ class PerformanceController(
     private val performanceService: PerformanceService
 ): Loggable {
 
-    @PostMapping("/register")
+    @PostMapping("/create")
     fun createPerformance(@RequestBody performanceRequest: PerformanceRequest) {
         return performanceService.createPerformance(performanceRequest)
     }
 
-    @GetMapping("/list/{id}")
-    fun getPerformanceList(@PathVariable("id") venueId: Long): List<PerformanceResponse> {
+    @GetMapping("/get/list/{venueId}")
+    fun getPerformanceList(@PathVariable("venueId") venueId: Long): List<PerformanceResponse> {
 
         return performanceService.getPerformanceList(venueId)
     }

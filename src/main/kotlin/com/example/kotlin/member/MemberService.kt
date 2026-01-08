@@ -87,12 +87,13 @@ class MemberService(
         if (member.lastRewardDate == null || member.lastRewardDate != today) {
             member.lastRewardDate = today
             member.reward += 200
+
+            log.info { "리워드 지급 성공 - $today ${member.username}님에게 리워드가 지급되었습니다." }
         } else {
             log.info {"리워드 지급 실패 - 날짜 : ${today}, 사용자: ${member.username}"}
             throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.REWARD_ALREADY_CLAIMED)
         }
 
-        log.info { "리워드 지급 성공 - $today ${member.username}님에게 리워드가 지급되었습니다." }
         return MemberRewardResponse(member.username, member.reward, member.lastRewardDate)
     }
 

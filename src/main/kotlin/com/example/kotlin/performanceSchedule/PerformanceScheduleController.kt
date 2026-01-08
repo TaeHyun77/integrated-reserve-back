@@ -9,20 +9,29 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-@RequestMapping("/api/screenInfo")
+@RequestMapping("/api/performanceSchedule")
 @RestController
 class PerformanceScheduleController(
     private val performanceScheduleService: PerformanceScheduleService
 ) {
 
-    @PostMapping("/register")
+    @PostMapping("/create")
     fun createPerformanceSchedule(
         @RequestBody performanceScheduleRequest: PerformanceScheduleRequest
     ) {
         performanceScheduleService.createPerformanceSchedule(performanceScheduleRequest)
     }
 
-    @GetMapping("/list/{venueId}/{performanceId}")
+    @GetMapping("/get/{venueId}/{performanceId}")
+    fun getPerformanceScheduleId(
+        @PathVariable("venueId") venueId: Long,
+        @PathVariable("performanceId") performanceId: Long
+    ): Long? {
+        return performanceScheduleService.getPerformanceScheduleId(venueId, performanceId)
+    }
+
+
+    @GetMapping("/get/list/{venueId}/{performanceId}")
     fun getPerformanceScheduleList(
         @PathVariable("venueId") venueId: Long,
         @PathVariable("performanceId") performanceId: Long

@@ -21,7 +21,7 @@ class VenueController(
         return venueService.createVenue(venueRequest)
     }
 
-    @GetMapping("/list")
+    @GetMapping("/get/list")
     fun getVenueList(): List<VenueResponse> {
         return venueService.getVenueList()
     }

@@ -4,7 +4,7 @@ import com.example.kotlin.seat.Seat
 
 interface SeatRepositoryCustom {
 
-    fun findSeatByScreenInfoId(screenInfoId: Long): List<Seat>
+    fun findSeatByPerformanceScheduleId(performanceScheduleId: Long): List<Seat>
 
-    fun findByScreenInfoAndSeatNumber(screenInfoId: Long?, seatNumber: String): Seat?
+    fun findByPerformanceScheduleIdAndSeatNumber(performanceScheduleId: Long, seatNumber: String): Seat?
 }

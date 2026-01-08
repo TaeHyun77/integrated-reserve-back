@@ -76,6 +76,8 @@ class ReserveService (
 
             // 예약 정보 및 좌석 세팅
             val reserve = createReservation(reserveRequest, member, performanceSchedule, payment)
+            reserveRepository.save(reserve)
+
             reserveSeats(seats, reserve)
 
             log.info {"예약 성공 - 사용자: ${member.username}, 좌석 수: ${reserveRequest.reservedSeat.size}, 총 가격: ${payment.totalAmount}, 포인트 사용: ${payment.rewardDiscountAmount}, 결제 금액: ${payment.finalAmount}"}
@@ -103,7 +105,7 @@ class ReserveService (
         seatNumber: String,
         member: Member
     ): Seat {
-        val seat = seatRepository.findByScreenInfoAndSeatNumber(performanceScheduleId, seatNumber)
+        val seat = seatRepository.findByPerformanceScheduleIdAndSeatNumber(performanceScheduleId, seatNumber)
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_SEAT_INFO)
 
         if (seat.isReserved) {
@@ -120,7 +122,8 @@ class ReserveService (
         reserve: Reserve
     ) {
         seats.forEach { seat ->
-            reserve.addSeat(seat)
+            seat.reserve = reserve
+            seat.isReserved = true
         }
     }
 
@@ -198,6 +201,11 @@ class ReserveService (
             log.info { "예약 취소 실패 - 사용자: ${member.username}, 원인: ${e.errorCode}" }
             throw e
         }
+    }
+
+    fun getUserReservations(username: String): List<ReserveResponse> {
+        return reserveRepository.findByReservedBy(username)
+            .map(ReserveResponse::from)
     }
 
     private fun createReservation(

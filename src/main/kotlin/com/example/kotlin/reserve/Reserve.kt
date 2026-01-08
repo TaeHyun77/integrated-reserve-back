@@ -40,12 +40,6 @@ class Reserve(
     @JoinColumn(name = "member_id")
     val member: Member,
 
-    @OneToMany(mappedBy = "reserve", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val seatList: MutableList<Seat> = ArrayList()
-): BaseTime() {
-    fun addSeat(seat: Seat) {
-        seat.reserve = this
-        seat.isReserved = true
-        seatList.add(seat)
-    }
-}
+    @OneToMany(mappedBy = "reserve")
+    val seatList: MutableList<Seat> = mutableListOf()
+): BaseTime()
