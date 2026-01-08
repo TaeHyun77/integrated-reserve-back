@@ -25,10 +25,11 @@ class IdempotencyService(
 
         if (savedIdempotency != null) {
             if (savedIdempotency.expiresAt.isAfter(LocalDateTime.now())) {
-                log.info { "동일한 요청 감지 - 키: $idempotencyKey" }
+                log.info { "동일한 중복 요청 감지 - 키: $idempotencyKey" }
 
                 return ResponseEntity
                     .status(savedIdempotency.statusCode)
+                    .header("Idempotent-Replayed", "true")
                     .body(savedIdempotency.responseBody)
             }
         }

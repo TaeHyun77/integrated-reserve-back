@@ -29,7 +29,7 @@ class MemberController(
     }
 
     // 사용자 회원가입
-    @PostMapping("/save")
+    @PostMapping("/create")
     fun saveMember(@RequestBody memberRequest: MemberRequest) {
         return memberService.saveMember(memberRequest)
     }
@@ -37,12 +37,12 @@ class MemberController(
     // 아이디 검증 로직
     @GetMapping("/check/validation/{username}")
     fun checkUsername(@PathVariable("username") username: String): ResponseEntity<UsernameAvailabilityResponse> {
-        log.info { "username 검증aa : $username" }
+        log.info { "username 검증 : $username" }
         return memberService.checkUsername(username)
     }
 
     // 하루 한 번 리워드 지급 로직
-    @PostMapping("/reward")
+    @PostMapping("/get/reward")
     fun earnRewardToday(
         request: HttpServletRequest,
     ): ResponseEntity<String> {

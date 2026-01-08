@@ -8,7 +8,8 @@ class SeatRepositoryImpl(
     private val queryFactory: JPAQueryFactory
 ): SeatRepositoryCustom {
 
-    override fun findSeatByScreenInfoId(performanceScheduleId: Long): List<Seat> {
+    override
+    fun findSeatByPerformanceScheduleId(performanceScheduleId: Long): List<Seat> {
         val seat = QSeat.seat
 
         return queryFactory
@@ -17,7 +18,8 @@ class SeatRepositoryImpl(
             .fetch()
     }
 
-    override fun findByScreenInfoAndSeatNumber(performanceScheduleId: Long?, seatNumber: String): Seat? {
+    override
+    fun findByPerformanceScheduleIdAndSeatNumber(performanceScheduleId: Long, seatNumber: String): Seat? {
         val seat = QSeat.seat
 
         return queryFactory

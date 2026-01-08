@@ -1,8 +1,8 @@
 package com.example.kotlin.performanceSchedule
 
+import com.example.kotlin.config.Loggable
 import com.example.kotlin.performance.Performance
 import com.example.kotlin.performance.repository.PerformanceRepository
-import com.example.kotlin.performance.dto.PerformanceResponse
 import com.example.kotlin.venue.Venue
 import com.example.kotlin.venue.VenueRepository
 import com.example.kotlin.reserveException.ErrorCode
@@ -19,7 +19,7 @@ class PerformanceScheduleService(
     private val performanceScheduleRepository: PerformanceScheduleRepository,
     private val venueRepository: VenueRepository,
     private val performanceRepository: PerformanceRepository
-) {
+): Loggable {
 
     @Transactional
     fun createPerformanceSchedule(performanceScheduleRequest: PerformanceScheduleRequest) {
@@ -48,5 +48,16 @@ class PerformanceScheduleService(
             .orElseThrow {
                 ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_PERFORMANCE_INFO)
             }
+    }
+
+    fun getPerformanceScheduleId(
+        venueId: Long,
+        performanceId: Long
+    ): Long? {
+        val performanceSchedule = performanceScheduleRepository.findPerformanceScheduleByVenueIdAndPerformanceId(venueId, performanceId)
+            ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_PERFORMANCE_SCHEDULE)
+
+        log.info{performanceSchedule.id}
+        return performanceSchedule.id
     }
 }

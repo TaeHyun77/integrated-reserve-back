@@ -11,16 +11,14 @@ class PerformanceScheduleRepositoryImpl(
 ): PerformanceScheduleRepositoryCustom {
 
     override
-    fun findPerformanceScheduleByVenueIdAndPerformanceId(venueId: Long?, performanceId: Long?): PerformanceScheduleResponse? {
+    fun findPerformanceScheduleByVenueIdAndPerformanceId(
+        venueId: Long,
+        performanceId: Long
+    ): PerformanceSchedule? {
         val performanceSchedule = QPerformanceSchedule.performanceSchedule
 
         return queryFactory
-            .select(
-                Projections.constructor(
-                PerformanceScheduleResponse::class.java,
-                    performanceSchedule.id,
-                    performanceSchedule.performance
-            ))
+            .select(performanceSchedule)
             .from(performanceSchedule)
             .where(
                 performanceSchedule.venue.id.eq(venueId),
@@ -33,14 +31,14 @@ class PerformanceScheduleRepositoryImpl(
     fun findPerformanceScheduleListByVenueIdAndPerformanceId(
         venueId: Long?, performanceId: Long?
     ): List<PerformanceSchedule>? {
-        val screenInfo = QPerformanceSchedule.performanceSchedule
+        val performanceSchedule = QPerformanceSchedule.performanceSchedule
 
         return queryFactory
-            .select(screenInfo)
-            .from(screenInfo)
+            .select(performanceSchedule)
+            .from(performanceSchedule)
             .where(
-                screenInfo.venue.id.eq(venueId),
-                screenInfo.performance.id.eq(performanceId)
+                performanceSchedule.venue.id.eq(venueId),
+                performanceSchedule.performance.id.eq(performanceId)
             )
             .fetch()
     }

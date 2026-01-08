@@ -24,7 +24,7 @@ class SeatController(
         seatService.initSeats(performanceScheduleId)
     }
 
-    @GetMapping("/list/{performanceScheduleId}")
+    @GetMapping("/get/list/{performanceScheduleId}")
     fun getSeatList(
         @PathVariable("performanceScheduleId") performanceScheduleId: Long
     ): List<SeatResponse> {

@@ -2,12 +2,14 @@ package com.example.kotlin.reserve
 
 import com.example.kotlin.config.Loggable
 import com.example.kotlin.reserve.dto.ReserveRequest
+import com.example.kotlin.reserve.dto.ReserveResponse
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -20,13 +22,13 @@ class ReserveController(
     private val reserveService: ReserveService
 ): Loggable {
 
-    @PostMapping("/reserve")
+    @PostMapping
     fun reserveSeat(
         @RequestBody reserveRequest: ReserveRequest,
         httpRequest: HttpServletRequest
     ): ResponseEntity<String> {
 
-        val idempotencyKey: String = httpRequest.getHeader("Idempotency-key")
+        val idempotencyKey: String = httpRequest.getHeader("idempotency-key")
             ?: throw ReserveException(HttpStatus.BAD_REQUEST, ErrorCode.NOT_EXIST_IN_HEADER_IDEMPOTENCY_KEY)
 
         log.info { "idempotencyKey : $idempotencyKey" }
@@ -47,5 +49,11 @@ class ReserveController(
         log.info { "idempotencyKey: $idempotencyKey" }
 
         reserveService.deleteReserveInfo(reserveNumber, idempotencyKey)
+    }
+
+    // 예약 내역
+    @GetMapping("/get/list/{username}")
+    fun getUserReservations(@PathVariable("username") username: String): List<ReserveResponse> {
+        return reserveService.getUserReservations(username)
     }
 }
