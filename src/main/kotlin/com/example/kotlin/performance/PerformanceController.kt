@@ -23,7 +23,9 @@ class PerformanceController(
     }
 
     @GetMapping("/get/list/{venueId}")
-    fun getPerformanceList(@PathVariable("venueId") venueId: Long): List<PerformanceResponse> {
+    fun getPerformanceList(
+        @PathVariable("venueId") venueId: Long
+    ): List<PerformanceResponse> {
 
         return performanceService.getPerformanceList(venueId)
     }

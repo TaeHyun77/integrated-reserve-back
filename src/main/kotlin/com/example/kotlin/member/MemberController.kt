@@ -36,7 +36,9 @@ class MemberController(
 
     // 아이디 검증 로직
     @GetMapping("/check/validation/{username}")
-    fun checkUsername(@PathVariable("username") username: String): ResponseEntity<UsernameAvailabilityResponse> {
+    fun checkUsername(
+        @PathVariable("username") username: String
+    ): ResponseEntity<UsernameAvailabilityResponse> {
         log.info { "username 검증 : $username" }
         return memberService.checkUsername(username)
     }

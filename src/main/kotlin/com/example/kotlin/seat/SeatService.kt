@@ -3,6 +3,7 @@ package com.example.kotlin.seat
 import com.example.kotlin.config.Loggable
 import com.example.kotlin.performanceSchedule.PerformanceSchedule
 import com.example.kotlin.performanceSchedule.repository.PerformanceScheduleRepository
+import com.example.kotlin.reserve.Reserve
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
 import com.example.kotlin.seat.dto.SeatResponse

@@ -4,6 +4,7 @@ import com.example.kotlin.config.Loggable
 import com.example.kotlin.reserve.dto.ReserveResponse
 import com.example.kotlin.reserveException.ReserveException
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -68,7 +69,8 @@ class IdempotencyService(
             .body(errorCode)
     }
 
-    private fun saveIdempotency(key: String, method: String, body: String, status: Int) {
+    @Transactional
+    fun saveIdempotency(key: String, method: String, body: String, status: Int) {
         idempotencyRepository.save(
             Idempotency(
                 idempotencyKey = key,
