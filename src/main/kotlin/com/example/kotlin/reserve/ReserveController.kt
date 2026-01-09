@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/reserve")
 @RestController
 class ReserveController(
+    private val reserveFacadeService: ReserveFacadeService,
     private val reserveService: ReserveService
 ): Loggable {
 
@@ -33,7 +34,7 @@ class ReserveController(
 
         log.info { "idempotencyKey : $idempotencyKey" }
 
-        return reserveService.reserveSeat(reserveRequest, idempotencyKey)
+        return reserveFacadeService.reserveSeat(reserveRequest, idempotencyKey)
     }
 
     // 예약 취소
@@ -48,12 +49,14 @@ class ReserveController(
 
         log.info { "idempotencyKey: $idempotencyKey" }
 
-        reserveService.deleteReserveInfo(reserveNumber, idempotencyKey)
+        reserveFacadeService.cancelReserve(reserveNumber, idempotencyKey)
     }
 
     // 예약 내역
     @GetMapping("/get/list/{username}")
-    fun getUserReservations(@PathVariable("username") username: String): List<ReserveResponse> {
+    fun getUserReservations(
+        @PathVariable("username") username: String
+    ): List<ReserveResponse> {
         return reserveService.getUserReservations(username)
     }
 }
