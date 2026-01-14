@@ -17,7 +17,7 @@ data class MemberResponse(
 
     val email: String,
 
-    var lastRewardDate: LocalDate?,
+    var lastRewardDate: LocalDate? = null,
 
     val credit: Long,
 

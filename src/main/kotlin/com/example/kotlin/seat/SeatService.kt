@@ -47,8 +47,8 @@ class SeatService(
     * 특정 영화관에서 상영 중인 영화의 좌석 목록 조회
     * */
     fun getSeatList(performanceScheduleId: Long): List<SeatResponse> {
-        val seats = seatRepository.findSeatByPerformanceScheduleId(performanceScheduleId)
+        val seatList =  seatRepository.findSeatByPerformanceScheduleId(performanceScheduleId)
 
-        return seats.map(SeatResponse::from)
+        return seatList.map(SeatResponse::from)
     }
 }

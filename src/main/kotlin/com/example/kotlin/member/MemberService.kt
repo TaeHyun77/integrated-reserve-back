@@ -6,10 +6,10 @@ import com.example.kotlin.jwt.JwtUtil
 import com.example.kotlin.member.dto.MemberRequest
 import com.example.kotlin.member.dto.MemberResponse
 import com.example.kotlin.member.dto.MemberRewardResponse
-import com.example.kotlin.member.dto.UsernameAvailabilityResponse
 import com.example.kotlin.redis.lock.RedisLockUtil
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
+import com.example.kotlin.util.removeSpacesAndHyphens
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -45,18 +45,17 @@ class MemberService(
         )
     }
 
-    fun checkUsername(username: String): ResponseEntity<UsernameAvailabilityResponse> {
-        val exists = memberRepository.existsByUsername(username)
+    fun checkUsername(username: String): ResponseEntity<String> {
+        val cleanedUsername = username.removeSpacesAndHyphens()
 
+        val exists = memberRepository.existsByUsername(cleanedUsername)
         if (exists) {
             throw ReserveException(HttpStatus.CONFLICT, ErrorCode.DUPLICATED_USERNAME)
         }
 
-        CheckUsername(username)
+        CheckUsername.from(cleanedUsername)
 
-        return ResponseEntity.ok(
-            UsernameAvailabilityResponse(true, "사용 가능한 아이디입니다.")
-        )
+        return ResponseEntity.ok(cleanedUsername)
     }
 
     fun earnRewardToday(

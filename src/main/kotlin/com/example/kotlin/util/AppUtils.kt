@@ -36,6 +36,7 @@ fun parsingToken(request: HttpServletRequest): String {
 
 fun String.removeSpacesAndHyphens(): String {
     log.info { "remove spaces or Hyphens" }
+
     if (this.contains(' ') || this.contains('-')) {
         return this.replace("[\\s-]".toRegex(), "")
     }

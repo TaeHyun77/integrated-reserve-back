@@ -3,7 +3,7 @@ package com.example.kotlin.venue.dto
 import com.example.kotlin.venue.Venue
 
 data class VenueResponse(
-    val id: Long?,
+    val id: Long? = null,
 
     val name: String,
 

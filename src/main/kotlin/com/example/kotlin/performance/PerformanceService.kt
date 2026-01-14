@@ -26,8 +26,8 @@ class PerformanceService(
     @Transactional
     fun getPerformanceList(venueId: Long): List<PerformanceResponse> {
 
-        val performances = performanceRepository.findPerformancesByVenueId(venueId)
+        val performanceList = performanceRepository.findPerformancesByVenueId(venueId)
 
-        return performances.map(PerformanceResponse::from)
+        return performanceList.map(PerformanceResponse::from)
     }
 }

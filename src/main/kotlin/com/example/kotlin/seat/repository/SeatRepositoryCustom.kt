@@ -1,6 +1,7 @@
 package com.example.kotlin.seat.repository
 
 import com.example.kotlin.seat.Seat
+import com.example.kotlin.seat.dto.SeatResponse
 
 interface SeatRepositoryCustom {
 

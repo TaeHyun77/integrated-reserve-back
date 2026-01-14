@@ -16,7 +16,7 @@ data class ReserveResponse (
 
     val finalAmount: Long,
 
-    val createdAt: LocalDateTime?
+    val createdAt: LocalDateTime? = null
 ) {
     companion object {
         fun from(reserve: Reserve): ReserveResponse {
