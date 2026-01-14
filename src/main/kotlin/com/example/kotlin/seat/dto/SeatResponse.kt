@@ -5,9 +5,9 @@ import com.example.kotlin.performanceSchedule.dto.PerformanceScheduleResponse
 import com.example.kotlin.seat.Seat
 
 data class SeatResponse(
-    val seatNumber: String?,
+    val seatNumber: String? = null,
 
-    val isReserved: Boolean?,
+    val isReserved: Boolean? = null,
 
     val performanceSchedule: PerformanceScheduleResponse
 ) {

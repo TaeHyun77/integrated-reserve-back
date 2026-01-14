@@ -1,6 +1,5 @@
 package com.example.kotlin.member.dto
 
-import com.example.kotlin.member.CheckUsername
 import com.example.kotlin.member.Member
 import com.example.kotlin.member.Role
 
@@ -19,11 +18,11 @@ data class MemberRequest (
 ) {
     fun toEntity(password: String): Member {
         return Member(
-            username = this.username,
+            username = username,
             password = password,
-            name = this.name,
-            role = this.role,
-            email = this.email,
+            name = name,
+            role = role,
+            email = email,
             reward = 0
         )
     }

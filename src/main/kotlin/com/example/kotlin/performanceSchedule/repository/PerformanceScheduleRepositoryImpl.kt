@@ -29,7 +29,8 @@ class PerformanceScheduleRepositoryImpl(
 
     override
     fun findPerformanceScheduleListByVenueIdAndPerformanceId(
-        venueId: Long?, performanceId: Long?
+        venueId: Long?,
+        performanceId: Long?
     ): List<PerformanceSchedule>? {
         val performanceSchedule = QPerformanceSchedule.performanceSchedule
 

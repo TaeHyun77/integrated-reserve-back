@@ -3,7 +3,6 @@ package com.example.kotlin.member
 import com.example.kotlin.config.Loggable
 import com.example.kotlin.member.dto.MemberRequest
 import com.example.kotlin.member.dto.MemberResponse
-import com.example.kotlin.member.dto.UsernameAvailabilityResponse
 import com.example.kotlin.reserveException.ErrorCode
 import com.example.kotlin.reserveException.ReserveException
 import com.example.kotlin.util.parsingToken
@@ -38,8 +37,9 @@ class MemberController(
     @GetMapping("/check/validation/{username}")
     fun checkUsername(
         @PathVariable("username") username: String
-    ): ResponseEntity<UsernameAvailabilityResponse> {
+    ): ResponseEntity<String> {
         log.info { "username 검증 : $username" }
+
         return memberService.checkUsername(username)
     }
 
