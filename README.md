@@ -54,17 +54,12 @@ Redis는 단일 서버뿐만 아니라 분산 서버 환경에서도 락을 효�
 
 또한, 여러 좌석에 동시에 락을 걸어야 하는 상황에서, 기존 스핀락 방식은 락 획득 순서가 보장되지 않아 데드락 위험이 존재했지만, Redisson 방식은 멀티락 기능을 통해 여러 락을 하나의 논리적 락으로 묶어 원자적으로 처리함으로써 데드락 발생 가능성을 크게 줄일 수 있다는 점에서 Redisson 기반 분산 락으로 변경했습니다.<br><br>
 
-**왜 DB락을 사용하지 않고 분산락을 사용할까**<br><br>
-- 쿼리 실행까지 가야 락이 적용됨 → DB 부하 증가
-
-- 트랜잭션 커밋 직전 또는 예외 발생 시점 → 로직이 모두 실행되고 나서야 실패<br><br>
-
 
 ### 분산락 구현과 JMeter 테스트
 ---
 
 기존 스핀락 방식에서 Redisson을 사용한 분산락 방식으로 변경하였습니다.
 
-Redisson 방식 : https://velog.io/@ayeah77/Lock-%EB%B0%A9%EC%8B%9D-%EB%B3%80%EA%B2%BD-%EB%B0%8F-%ED%85%8C%EC%8A%A4%ED%8A%B8
-
 스핀락 방식 : https://velog.io/@ayeah77/%EB%B6%84%EC%82%B0%EB%9D%BD-%EA%B5%AC%ED%98%84%EA%B3%BC-%ED%85%8C%EC%8A%A4%ED%8A%B8
+
+변경한 Redisson 방식 : https://velog.io/@ayeah77/Lock-%EB%B0%A9%EC%8B%9D-%EB%B3%80%EA%B2%BD-%EB%B0%8F-%ED%85%8C%EC%8A%A4%ED%8A%B8
